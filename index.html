@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Beat My Score</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app-container">
+        <!-- START SCREEN (WELCOME) -->
+        <div id="screen-start" class="screen">
+            <h1 class="logo">🎯<br>Beat My Score</h1>
+            <p class="subtitle">Ready to beat the world?</p>
+            <button id="btn-start-onboarding" class="btn-primary">START</button>
+        </div>
+
+        <!-- ONBOARDING: NAME -->
+        <div id="screen-name" class="screen">
+            <h2 class="step-title">What should we call you?</h2>
+            <input type="text" id="input-name" class="input-field" placeholder="e.g. Rahul" maxlength="15" autocomplete="off">
+            <button id="btn-next-name" class="btn-primary btn-disabled" disabled>NEXT</button>
+        </div>
+
+        <!-- ONBOARDING: COUNTRY -->
+        <div id="screen-country" class="screen">
+            <h2 class="step-title">Where are you from?</h2>
+            <select id="select-country" class="input-field">
+                <option value="" disabled selected>Select your country</option>
+                <option value="🇮🇳 India">🇮🇳 India</option>
+                <option value="🇺🇸 USA">🇺🇸 USA</option>
+                <option value="🇬🇧 UK">🇬🇧 UK</option>
+                <option value="🇨🇦 Canada">🇨🇦 Canada</option>
+                <option value="🇦🇺 Australia">🇦🇺 Australia</option>
+                <option value="🌎 Other">🌎 Other</option>
+            </select>
+            <button id="btn-next-country" class="btn-primary btn-disabled" disabled>NEXT</button>
+        </div>
+
+        <!-- ONBOARDING: AGE -->
+        <div id="screen-age" class="screen">
+            <h2 class="step-title">How old are you?</h2>
+            <div class="age-grid">
+                <button class="btn-age" data-age="Under 13">Under 13</button>
+                <button class="btn-age" data-age="13-17">13–17</button>
+                <button class="btn-age" data-age="18-24">18–24</button>
+                <button class="btn-age" data-age="25-34">25–34</button>
+                <button class="btn-age" data-age="35-44">35–44</button>
+                <button class="btn-age" data-age="45+">45+</button>
+            </div>
+            <button id="btn-finish-onboarding" class="btn-primary btn-disabled" disabled>FINISH</button>
+        </div>
+
+        <!-- HOME SCREEN -->
+        <div id="screen-home" class="screen">
+            <h1 class="logo small-logo">🎯 Beat My Score</h1>
+            
+            <div class="profile-card">
+                <div class="profile-header">
+                    <span id="display-name" class="profile-name">Player</span>
+                    <span id="display-country" class="profile-flag">🌎</span>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat-col">
+                        <span class="stat-lbl">Best Score</span>
+                        <span id="home-best-score" class="stat-val">0</span>
+                    </div>
+                    <div class="stat-col">
+                        <span class="stat-lbl">Games</span>
+                        <span id="home-games-played" class="stat-val">0</span>
+                    </div>
+                </div>
+                <div class="level-indicator">LEVEL 1</div>
+            </div>
+
+            <div class="home-actions">
+                <button id="btn-play" class="btn-huge">▶ TAP TO PLAY</button>
+                <!-- Placeholders for future steps -->
+                <button class="btn-secondary">🏆 SCOREBOARD</button>
+                <button class="btn-secondary">👤 PROFILE</button>
+                <button class="btn-secondary">⚙ SETTINGS</button>
+            </div>
+        </div>
+
+        <!-- GAME SCREEN -->
+        <div id="screen-game" class="screen">
+            <div class="game-header">
+                <div class="stat-box">
+                    <span class="stat-label">TIME</span>
+                    <span id="ui-time" class="stat-value">30</span>
+                </div>
+                <div class="stat-box center">
+                    <span class="stat-label">COMBO</span>
+                    <span id="ui-combo" class="stat-value highlight">0🔥</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">SCORE</span>
+                    <span id="ui-score" class="stat-value">0</span>
+                </div>
+            </div>
+            
+            <div id="play-area">
+                <div id="target"></div>
+            </div>
+        </div>
+
+        <!-- RESULT SCREEN -->
+        <div id="screen-result" class="screen">
+            <h2>🎯 GAME COMPLETE</h2>
+            
+            <div class="result-stats">
+                <div class="result-row">
+                    <span>Time:</span>
+                    <span>30 SEC</span>
+                </div>
+                <div class="result-row highlight-row">
+                    <span>Score:</span>
+                    <span id="result-score">0</span>
+                </div>
+                <div class="result-row">
+                    <span>Max Combo:</span>
+                    <span id="result-combo">0</span>
+                </div>
+            </div>
+
+            <button id="btn-home" class="btn-secondary" style="margin-bottom: 12px;">🏠 HOME</button>
+            <button id="btn-restart" class="btn-primary">🔄 PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
