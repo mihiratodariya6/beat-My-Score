@@ -38,7 +38,7 @@
             <h2 class="step-title">Where are you from?</h2>
             <select id="select-country" class="input-field">
                 <option value="" disabled selected>Select your country</option>
-                <!-- Options will be added via JS -->
+                <!-- Options populated by JS -->
             </select>
             <button id="btn-next-country" class="btn-primary btn-disabled" disabled>NEXT</button>
         </div>
@@ -69,7 +69,7 @@
                             <span id="display-name" class="profile-name">Player</span>
                             <span id="display-country" class="profile-flag">🌎</span>
                         </div>
-                        <div class="level-badge">LEVEL 1</div>
+                        <div id="display-level-badge" class="level-badge">LEVEL 1</div>
                     </div>
                 </div>
                 
@@ -87,11 +87,34 @@
             </div>
 
             <div class="home-actions">
-                <button id="btn-play" class="btn-huge">▶ TAP TO PLAY</button>
+                <button id="btn-go-level-select" class="btn-huge">▶ TAP TO PLAY</button>
                 <button class="btn-secondary">🏆 SCOREBOARD</button>
                 <button class="btn-secondary">👤 PROFILE</button>
                 <button class="btn-secondary">⚙ SETTINGS</button>
             </div>
+        </div>
+
+        <!-- LEVEL SELECTION SCREEN -->
+        <div id="screen-level-select" class="screen">
+            <div class="header-with-back">
+                <button id="btn-back-home" class="btn-icon">🔙</button>
+                <h2 class="page-title">Select Level</h2>
+            </div>
+            
+            <p class="level-desc">Higher levels unlock more time, but the target gets smaller!</p>
+
+            <div id="level-list" class="level-list">
+                <!-- Levels populated by JS -->
+            </div>
+            
+            <button id="btn-start-game" class="btn-primary btn-disabled" disabled style="margin-top:auto;">START GAME</button>
+        </div>
+
+        <!-- GET READY SCREEN -->
+        <div id="screen-ready" class="screen">
+            <h2 id="ready-level-text" class="ready-title">LEVEL 1</h2>
+            <p id="ready-time-text" class="ready-subtitle">30 SECONDS</p>
+            <div id="ready-countdown" class="countdown-text">3</div>
         </div>
 
         <!-- GAME SCREEN -->
@@ -120,10 +143,18 @@
         <div id="screen-result" class="screen">
             <h2>🎯 GAME COMPLETE</h2>
             
+            <div id="unlock-message" class="unlock-message" style="display: none;">
+                🎉 LEVEL 2 UNLOCKED!
+            </div>
+
             <div class="result-stats">
                 <div class="result-row">
+                    <span>Level:</span>
+                    <span id="result-level">1</span>
+                </div>
+                <div class="result-row">
                     <span>Time:</span>
-                    <span>30 SEC</span>
+                    <span id="result-time">30 SEC</span>
                 </div>
                 <div class="result-row highlight-row">
                     <span>Score:</span>
@@ -135,7 +166,7 @@
                 </div>
             </div>
 
-            <button id="btn-home" class="btn-secondary" style="margin-bottom: 12px;">🏠 HOME</button>
+            <button id="btn-result-home" class="btn-secondary" style="margin-bottom: 12px;">🏠 HOME</button>
             <button id="btn-restart" class="btn-primary">🔄 PLAY AGAIN</button>
         </div>
     </div>
