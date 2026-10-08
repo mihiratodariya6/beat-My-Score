@@ -8,8 +8,7 @@
     -webkit-user-select: none;
 }
 
-/* Allow text selection in inputs */
-input {
+input, select {
     user-select: auto;
     -webkit-user-select: auto;
 }
@@ -83,7 +82,7 @@ body {
 
 .logo.small-logo {
     font-size: 24px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .subtitle {
@@ -186,93 +185,129 @@ body {
     background-color: white;
 }
 
-/* AGE GRID */
-.age-grid {
+/* GRID OPTIONS (GENDER & AGE) */
+.grid-options {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 12px;
     margin-bottom: 40px;
 }
 
-.btn-age {
+.age-grid {
+    grid-template-columns: 1fr 1fr;
+}
+
+.btn-option {
     background-color: var(--bg-color);
     border: 2px solid transparent;
     padding: 16px 10px;
     border-radius: 16px;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
     color: var(--text-main);
     cursor: pointer;
     transition: all 0.2s;
 }
 
-.btn-age.selected {
+.btn-option.selected {
     background-color: rgba(79, 70, 229, 0.1);
     border-color: var(--primary);
     color: var(--primary);
 }
 
-/* HOME PROFILE CARD */
-.profile-card {
-    background: var(--bg-color);
-    border-radius: 20px;
-    padding: 20px;
+/* NEW PREMIUM HOME PROFILE CARD */
+.premium-card {
+    background: linear-gradient(135deg, #1e1b4b, #4338ca);
+    border-radius: 24px;
+    padding: 24px;
     margin-bottom: 32px;
-    position: relative;
+    color: white;
+    box-shadow: 0 10px 20px rgba(67, 56, 202, 0.3);
 }
 
-.profile-header {
+.profile-header-new {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.profile-avatar {
+    width: 64px;
+    height: 64px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+}
+
+.profile-info-new {
+    flex: 1;
+}
+
+.name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
 }
 
 .profile-name {
     font-size: 24px;
     font-weight: 800;
-    color: var(--text-main);
 }
 
 .profile-flag {
-    font-size: 28px;
+    font-size: 24px;
 }
 
-.profile-stats {
-    display: flex;
-    justify-content: space-between;
-    border-top: 1px solid rgba(0,0,0,0.05);
-    padding-top: 16px;
-}
-
-.stat-col {
-    display: flex;
-    flex-direction: column;
-}
-
-.stat-lbl {
-    font-size: 12px;
-    color: var(--text-muted);
-    font-weight: 600;
-}
-
-.stat-val {
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--text-main);
-}
-
-.level-indicator {
-    position: absolute;
-    top: -12px;
-    right: 20px;
-    background: var(--text-main);
+.level-badge {
+    display: inline-block;
+    background: #F59E0B;
     color: white;
-    padding: 4px 12px;
-    border-radius: 100px;
+    padding: 4px 10px;
+    border-radius: 8px;
     font-size: 12px;
     font-weight: 800;
     letter-spacing: 1px;
+}
+
+.profile-stats-new {
+    display: flex;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 16px;
+    padding: 16px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-col-new {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.stat-lbl-new {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+}
+
+.stat-val-new {
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.stat-divider {
+    width: 2px;
+    height: 30px;
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
 .home-actions {
@@ -283,7 +318,7 @@ body {
 }
 
 /* START SCREEN CENTERING */
-#screen-start {
+#screen-start, #screen-result {
     justify-content: center;
     align-items: center;
 }
@@ -307,7 +342,6 @@ body {
     display: flex;
     flex-direction: column;
 }
-
 .stat-box.center {
     align-items: center;
 }
@@ -366,11 +400,6 @@ body {
 }
 
 /* RESULT SCREEN */
-#screen-result {
-    justify-content: center;
-    align-items: center;
-}
-
 #screen-result h2 {
     font-size: 28px;
     margin-bottom: 32px;

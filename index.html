@@ -22,17 +22,23 @@
             <button id="btn-next-name" class="btn-primary btn-disabled" disabled>NEXT</button>
         </div>
 
+        <!-- ONBOARDING: GENDER -->
+        <div id="screen-gender" class="screen">
+            <h2 class="step-title">Select your gender</h2>
+            <div class="grid-options">
+                <button class="btn-option btn-gender" data-gender="Male">👨 Male</button>
+                <button class="btn-option btn-gender" data-gender="Female">👩 Female</button>
+                <button class="btn-option btn-gender" data-gender="Other">👤 Other</button>
+            </div>
+            <button id="btn-next-gender" class="btn-primary btn-disabled" disabled>NEXT</button>
+        </div>
+
         <!-- ONBOARDING: COUNTRY -->
         <div id="screen-country" class="screen">
             <h2 class="step-title">Where are you from?</h2>
             <select id="select-country" class="input-field">
                 <option value="" disabled selected>Select your country</option>
-                <option value="🇮🇳 India">🇮🇳 India</option>
-                <option value="🇺🇸 USA">🇺🇸 USA</option>
-                <option value="🇬🇧 UK">🇬🇧 UK</option>
-                <option value="🇨🇦 Canada">🇨🇦 Canada</option>
-                <option value="🇦🇺 Australia">🇦🇺 Australia</option>
-                <option value="🌎 Other">🌎 Other</option>
+                <!-- Options will be added via JS -->
             </select>
             <button id="btn-next-country" class="btn-primary btn-disabled" disabled>NEXT</button>
         </div>
@@ -40,13 +46,13 @@
         <!-- ONBOARDING: AGE -->
         <div id="screen-age" class="screen">
             <h2 class="step-title">How old are you?</h2>
-            <div class="age-grid">
-                <button class="btn-age" data-age="Under 13">Under 13</button>
-                <button class="btn-age" data-age="13-17">13–17</button>
-                <button class="btn-age" data-age="18-24">18–24</button>
-                <button class="btn-age" data-age="25-34">25–34</button>
-                <button class="btn-age" data-age="35-44">35–44</button>
-                <button class="btn-age" data-age="45+">45+</button>
+            <div class="grid-options age-grid">
+                <button class="btn-option btn-age" data-age="Under 13">Under 13</button>
+                <button class="btn-option btn-age" data-age="13-17">13–17</button>
+                <button class="btn-option btn-age" data-age="18-24">18–24</button>
+                <button class="btn-option btn-age" data-age="25-34">25–34</button>
+                <button class="btn-option btn-age" data-age="35-44">35–44</button>
+                <button class="btn-option btn-age" data-age="45+">45+</button>
             </div>
             <button id="btn-finish-onboarding" class="btn-primary btn-disabled" disabled>FINISH</button>
         </div>
@@ -55,27 +61,33 @@
         <div id="screen-home" class="screen">
             <h1 class="logo small-logo">🎯 Beat My Score</h1>
             
-            <div class="profile-card">
-                <div class="profile-header">
-                    <span id="display-name" class="profile-name">Player</span>
-                    <span id="display-country" class="profile-flag">🌎</span>
-                </div>
-                <div class="profile-stats">
-                    <div class="stat-col">
-                        <span class="stat-lbl">Best Score</span>
-                        <span id="home-best-score" class="stat-val">0</span>
-                    </div>
-                    <div class="stat-col">
-                        <span class="stat-lbl">Games</span>
-                        <span id="home-games-played" class="stat-val">0</span>
+            <div class="premium-card">
+                <div class="profile-header-new">
+                    <div id="display-avatar" class="profile-avatar">👨</div>
+                    <div class="profile-info-new">
+                        <div class="name-row">
+                            <span id="display-name" class="profile-name">Player</span>
+                            <span id="display-country" class="profile-flag">🌎</span>
+                        </div>
+                        <div class="level-badge">LEVEL 1</div>
                     </div>
                 </div>
-                <div class="level-indicator">LEVEL 1</div>
+                
+                <div class="profile-stats-new">
+                    <div class="stat-col-new">
+                        <span class="stat-lbl-new">BEST SCORE</span>
+                        <span id="home-best-score" class="stat-val-new">0</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-col-new">
+                        <span class="stat-lbl-new">GAMES PLAYED</span>
+                        <span id="home-games-played" class="stat-val-new">0</span>
+                    </div>
+                </div>
             </div>
 
             <div class="home-actions">
                 <button id="btn-play" class="btn-huge">▶ TAP TO PLAY</button>
-                <!-- Placeholders for future steps -->
                 <button class="btn-secondary">🏆 SCOREBOARD</button>
                 <button class="btn-secondary">👤 PROFILE</button>
                 <button class="btn-secondary">⚙ SETTINGS</button>

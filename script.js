@@ -2,6 +2,7 @@
 const screens = document.querySelectorAll('.screen');
 const screenStart = document.getElementById('screen-start');
 const screenName = document.getElementById('screen-name');
+const screenGender = document.getElementById('screen-gender');
 const screenCountry = document.getElementById('screen-country');
 const screenAge = document.getElementById('screen-age');
 const screenHome = document.getElementById('screen-home');
@@ -12,12 +13,15 @@ const screenResult = document.getElementById('screen-result');
 const btnStartOnboarding = document.getElementById('btn-start-onboarding');
 const inputName = document.getElementById('input-name');
 const btnNextName = document.getElementById('btn-next-name');
+const btnGenders = document.querySelectorAll('.btn-gender');
+const btnNextGender = document.getElementById('btn-next-gender');
 const selectCountry = document.getElementById('select-country');
 const btnNextCountry = document.getElementById('btn-next-country');
 const btnAges = document.querySelectorAll('.btn-age');
 const btnFinishOnboarding = document.getElementById('btn-finish-onboarding');
 
 // Home Elements
+const displayAvatar = document.getElementById('display-avatar');
 const displayName = document.getElementById('display-name');
 const displayCountry = document.getElementById('display-country');
 const homeBestScore = document.getElementById('home-best-score');
@@ -40,13 +44,13 @@ const btnRestart = document.getElementById('btn-restart');
 // --- APP STATE ---
 let playerProfile = {
     name: '',
+    gender: '',
     country: '',
     age: '',
     bestScore: 0,
     gamesPlayed: 0
 };
 
-// --- GAME STATE ---
 let score = 0;
 let combo = 0;
 let maxCombo = 0;
@@ -55,12 +59,26 @@ let gameInterval;
 let isPlaying = false;
 const TARGET_SIZE = 70; 
 
+// --- HUGE COUNTRY LIST WITH FLAGS ---
+const worldCountries = [
+    "🇮🇳 India", "🇺🇸 USA", "🇬🇧 UK", "🇨🇦 Canada", "🇦🇺 Australia", "🇦🇪 UAE", 
+    "🇵🇰 Pakistan", "🇧🇩 Bangladesh", "🇳🇵 Nepal", "🇱🇰 Sri Lanka", "🇨🇳 China", 
+    "🇯🇵 Japan", "🇰🇷 South Korea", "🇸🇬 Singapore", "🇲🇾 Malaysia", "🇮🇩 Indonesia",
+    "🇵🇭 Philippines", "🇹🇭 Thailand", "🇻🇳 Vietnam", "🇩🇪 Germany", "🇫🇷 France", 
+    "🇮🇹 Italy", "🇪🇸 Spain", "🇵🇹 Portugal", "🇳🇱 Netherlands", "🇨🇭 Switzerland", 
+    "🇸🇪 Sweden", "🇳🇴 Norway", "🇩🇰 Denmark", "🇫🇮 Finland", "🇷🇺 Russia", 
+    "🇺🇦 Ukraine", "🇧🇷 Brazil", "🇦🇷 Argentina", "🇨🇴 Colombia", "🇲🇽 Mexico", 
+    "🇿🇦 South Africa", "🇳🇬 Nigeria", "🇰🇪 Kenya", "🇪🇬 Egypt", "🇸🇦 Saudi Arabia", 
+    "🇮🇷 Iran", "🇹🇷 Turkey", "🇮🇱 Israel", "🇳🇿 New Zealand", "🌎 Other"
+];
+
 // --- INITIALIZATION ---
 function init() {
+    populateCountries();
     loadProfile();
     
-    // If profile exists, go to Home, else show Start Screen
-    if (playerProfile.name && playerProfile.country && playerProfile.age) {
+    // Check if profile is fully set up
+    if (playerProfile.name && playerProfile.gender && playerProfile.country && playerProfile.age) {
         updateHomeUI();
         showScreen(screenHome);
     } else {
@@ -68,11 +86,19 @@ function init() {
     }
 }
 
+function populateCountries() {
+    worldCountries.forEach(country => {
+        let opt = document.createElement('option');
+        opt.value = country;
+        opt.innerText = country;
+        selectCountry.appendChild(opt);
+    });
+}
+
 // --- LOCAL STORAGE ---
 function loadProfile() {
     const saved = localStorage.getItem('beatMyScoreProfile');
     if (saved) {
-        // Merge saved data with default profile structure
         playerProfile = { ...playerProfile, ...JSON.parse(saved) };
     }
 }
@@ -89,10 +115,15 @@ function showScreen(screenElement) {
 
 // --- ONBOARDING LOGIC ---
 btnStartOnboarding.addEventListener('click', () => {
+    // Check if user already entered name previously but didn't finish
+    if(playerProfile.name) {
+        // Clear local storage if they are restarting onboarding
+        localStorage.removeItem('beatMyScoreProfile'); 
+    }
     showScreen(screenName);
 });
 
-// Name validation
+// Name
 inputName.addEventListener('input', () => {
     if (inputName.value.trim().length > 0) {
         btnNextName.disabled = false;
@@ -105,10 +136,25 @@ inputName.addEventListener('input', () => {
 
 btnNextName.addEventListener('click', () => {
     playerProfile.name = inputName.value.trim();
+    showScreen(screenGender);
+});
+
+// Gender
+btnGenders.forEach(btn => {
+    btn.addEventListener('click', () => {
+        btnGenders.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        playerProfile.gender = btn.getAttribute('data-gender');
+        btnNextGender.disabled = false;
+        btnNextGender.classList.remove('btn-disabled');
+    });
+});
+
+btnNextGender.addEventListener('click', () => {
     showScreen(screenCountry);
 });
 
-// Country validation
+// Country
 selectCountry.addEventListener('change', () => {
     if (selectCountry.value !== "") {
         btnNextCountry.disabled = false;
@@ -121,16 +167,12 @@ btnNextCountry.addEventListener('click', () => {
     showScreen(screenAge);
 });
 
-// Age selection
+// Age
 btnAges.forEach(btn => {
     btn.addEventListener('click', () => {
-        // Remove selection from all
         btnAges.forEach(b => b.classList.remove('selected'));
-        // Add to clicked
         btn.classList.add('selected');
-        
         playerProfile.age = btn.getAttribute('data-age');
-        
         btnFinishOnboarding.disabled = false;
         btnFinishOnboarding.classList.remove('btn-disabled');
     });
@@ -145,7 +187,13 @@ btnFinishOnboarding.addEventListener('click', () => {
 // --- HOME LOGIC ---
 function updateHomeUI() {
     displayName.innerText = playerProfile.name;
-    // Extract just the flag emoji from the country string (e.g. "🇮🇳 India" -> "🇮🇳")
+    
+    // Set Avatar based on Gender
+    if (playerProfile.gender === 'Male') displayAvatar.innerText = '👨';
+    else if (playerProfile.gender === 'Female') displayAvatar.innerText = '👩';
+    else displayAvatar.innerText = '👤';
+
+    // Extract Flag
     const flag = playerProfile.country.split(' ')[0];
     displayCountry.innerText = flag;
     
@@ -185,7 +233,6 @@ function startGame() {
 
 function updateTimer() {
     if (!isPlaying) return;
-    
     timeLeft--;
     uiTime.innerText = timeLeft;
 
@@ -204,7 +251,6 @@ function handleTargetHit(e) {
 
     uiScore.innerText = score;
     uiCombo.innerText = `${combo}🔥`;
-
     moveTarget();
 }
 
@@ -229,7 +275,6 @@ function endGame() {
     clearInterval(gameInterval);
     target.style.display = 'none';
 
-    // Update Player Profile logic
     playerProfile.gamesPlayed++;
     if (score > playerProfile.bestScore) {
         playerProfile.bestScore = score;
