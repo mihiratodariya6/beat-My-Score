@@ -8,7 +8,7 @@
 </head>
 <body>
     <div id="app-container">
-        <!-- START SCREEN (WELCOME) -->
+        <!-- START SCREEN -->
         <div id="screen-start" class="screen">
             <h1 class="logo">🎯<br>Beat My Score</h1>
             <p class="subtitle">Ready to beat the world?</p>
@@ -38,7 +38,6 @@
             <h2 class="step-title">Where are you from?</h2>
             <select id="select-country" class="input-field">
                 <option value="" disabled selected>Select your country</option>
-                <!-- Options populated by JS -->
             </select>
             <button id="btn-next-country" class="btn-primary btn-disabled" disabled>NEXT</button>
         </div>
@@ -59,9 +58,14 @@
 
         <!-- HOME SCREEN -->
         <div id="screen-home" class="screen">
-            <h1 class="logo small-logo">🎯 Beat My Score</h1>
+            <div class="home-top-bar">
+                <h1 class="logo small-logo" style="margin:0;">🎯 Beat My Score</h1>
+                <div class="coin-display">
+                    🪙 <span id="home-coins">0</span>
+                </div>
+            </div>
             
-            <div class="premium-card">
+            <div class="premium-card" style="margin-top: 20px;">
                 <div class="profile-header-new">
                     <div id="display-avatar" class="profile-avatar">👨</div>
                     <div class="profile-info-new">
@@ -94,8 +98,37 @@
             <div class="home-actions">
                 <button id="btn-go-level-select" class="btn-huge">▶ TAP TO PLAY</button>
                 <button class="btn-secondary">🏆 SCOREBOARD</button>
-                <button class="btn-secondary">👤 PROFILE</button>
+                <!-- Replaced Profile with Shop since Profile is visible above -->
+                <button id="btn-go-shop" class="btn-secondary" style="background:#F59E0B; color:white;">🛒 ITEM SHOP</button>
                 <button id="btn-go-settings" class="btn-secondary">⚙ SETTINGS</button>
+            </div>
+        </div>
+
+        <!-- SHOP SCREEN -->
+        <div id="screen-shop" class="screen">
+            <div class="header-with-back" style="justify-content: space-between;">
+                <div style="display:flex; align-items:center; gap:16px;">
+                    <button id="btn-back-shop" class="btn-icon">🔙</button>
+                    <h2 class="page-title">Shop</h2>
+                </div>
+                <div class="coin-display">
+                    🪙 <span id="shop-coins">0</span>
+                </div>
+            </div>
+            
+            <div class="shop-tabs">
+                <button id="tab-colors" class="shop-tab active">Colors</button>
+                <button id="tab-shapes" class="shop-tab">Designs</button>
+            </div>
+
+            <!-- Colors Container -->
+            <div id="shop-container-colors" class="shop-grid">
+                <!-- Populated by JS -->
+            </div>
+
+            <!-- Shapes Container -->
+            <div id="shop-container-shapes" class="shop-grid" style="display:none;">
+                <!-- Populated by JS -->
             </div>
         </div>
 
@@ -106,24 +139,15 @@
                 <h2 class="page-title">Settings</h2>
             </div>
             
-            <h3 class="settings-section-title">Target Color</h3>
-            <p class="settings-desc">Choose the color of your target circle.</p>
+            <h3 class="settings-section-title" style="margin-top: 20px;">Audio</h3>
+            <p class="settings-desc">Manage game sounds.</p>
             
-            <div class="color-grid">
-                <div class="color-option" data-color="#3B82F6" style="background-color: #3B82F6;"></div> <!-- Blue -->
-                <div class="color-option" data-color="#10B981" style="background-color: #10B981;"></div> <!-- Green -->
-                <div class="color-option" data-color="#EF4444" style="background-color: #EF4444;"></div> <!-- Red -->
-                <div class="color-option" data-color="#8B5CF6" style="background-color: #8B5CF6;"></div> <!-- Purple -->
-                <div class="color-option" data-color="#F59E0B" style="background-color: #F59E0B;"></div> <!-- Yellow -->
-                <div class="color-option" data-color="#F97316" style="background-color: #F97316;"></div> <!-- Orange -->
-                <div class="color-option" data-color="#FFFFFF" style="background-color: #FFFFFF; border: 2px solid #E5E7EB;"></div> <!-- White -->
-                <div class="color-option" data-color="#111827" style="background-color: #111827;"></div> <!-- Black -->
-            </div>
-
-            <!-- Future: Sound Settings Placeholder -->
-            <h3 class="settings-section-title" style="margin-top: 32px;">Audio</h3>
             <div class="settings-row">
                 <span>Sound Effects</span>
+                <span style="color:var(--text-muted);">Coming Soon</span>
+            </div>
+            <div class="settings-row">
+                <span>Music</span>
                 <span style="color:var(--text-muted);">Coming Soon</span>
             </div>
         </div>
@@ -184,25 +208,21 @@
             <h3 id="feedback-message" class="feedback-msg">🎮 GREAT FIRST GAME!</h3>
 
             <div class="result-stats">
-                <div class="result-row">
-                    <span>Level Played:</span>
-                    <span id="result-level">1 (30s)</span>
-                </div>
-                <div class="result-row" style="opacity: 0.7; font-size: 16px;">
-                    <span>Last Play:</span>
-                    <span id="result-last-play">0</span>
-                </div>
-                <div class="result-row highlight-row">
+                <div class="result-row highlight-row" style="margin-top:0; border-top:none;">
                     <span>LATEST SCORE:</span>
                     <span id="result-score">0</span>
                 </div>
-                <div class="result-row" style="color: #4F46E5;">
+                <div class="result-row" style="color: #F59E0B; font-weight:800; justify-content:center; gap:8px;">
+                    <span>COINS EARNED:</span>
+                    <span>+<span id="result-coins">0</span> 🪙</span>
+                </div>
+                <div class="result-row" style="opacity: 0.7; font-size: 14px; margin-top: 16px;">
+                    <span>Level Played:</span>
+                    <span id="result-level">1 (30s)</span>
+                </div>
+                <div class="result-row" style="color: #4F46E5; font-size: 14px;">
                     <span>All-Time Best:</span>
                     <span id="result-best">0</span>
-                </div>
-                <div class="result-row" style="opacity: 0.7; font-size: 14px; margin-top: 8px;">
-                    <span>Max Combo:</span>
-                    <span id="result-combo">0</span>
                 </div>
             </div>
 
