@@ -49,6 +49,8 @@ const containerColors = document.getElementById('shop-container-colors');
 const containerShapes = document.getElementById('shop-container-shapes');
 
 const btnBackSettings = document.getElementById('btn-back-settings');
+const toggleSound = document.getElementById('toggle-sound');
+
 const btnBackHome = document.getElementById('btn-back-home');
 const levelListContainer = document.getElementById('level-list');
 const btnStartGame = document.getElementById('btn-start-game');
@@ -78,14 +80,39 @@ const btnRestart = document.getElementById('btn-restart');
 let playerProfile = {
     name: '', gender: '', country: '', age: '',
     bestScore: 0, totalScore: 0, lastScore: 0, gamesPlayed: 0, coins: 0,
-    unlockedLevel: 1,
-    targetColor: 'Red', targetShape: 'Circle',
+    unlockedLevel: 1, targetColor: 'Red', targetShape: 'Circle',
     unlockedColors: ['Red', 'Blue', 'Green'],
     unlockedShapes: ['Circle', 'Square'],
-    unlockedAchievements: [] // Array of achievement IDs
+    unlockedAchievements: [],
+    soundEnabled: true
 };
 
-// --- DATA: ACHIEVEMENTS ---
+// --- BASE64 SOUNDS (Tiny, immediate loading) ---
+const sfx = {
+    tap: new Audio("data:audio/wav;base64,UklGRmYBAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUMBAACA/v/7//f/6//e/83/uf+a/3b/UP8o/wD//P72/vL+3/7S/sz+2/7X/s7+rf6P/n7+Vv4y/hT+8/3h/dX95/3V/cz9vf2g/YH9Vv0j/Qj97Pzm/Nz83/zc/Nz8zvyq/IT8Wvw//Bz88fvh++D72vvR+837tPua+3v7YftM+z/7H/v/+9v7nfsS+x/7Tvsj+zj7KPsT+/T66Prh+tX61/rT+rn6m/p++k76Ifre+Z/5Yfkr+eH4tPh2+FL4NPgc+A=="),
+    click: new Audio("data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAAAACA/v/3/+//5//j/+b/4v/b/87/x//E/8f/wf+w/5X/c/9K/yH/9v7f/r7+lv5w/kz+Mv4S/vb93f25/Zn9c/1Q/Tb9Hf0J/fj83/y4/Jr8jPxs/FT8I/z1+9b7rvuV+2H7Kvv7+t/6nPpG+v757Pk="),
+    over: new Audio("data:audio/wav;base64,UklGRq4AAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YIgAAACA/v/0/9X/p/92/zn/+v7Q/pr+Xv4W/db8gvws/Nb7ifsz+/r6x/qU+l76IPr4+cL5jvlB+fv4wPiO+E/4Evjp98v3uvfL99X30vfb9+r3/fcO+Cb4Qvh++KT41Pj5+Bn5Qfl0+ab51Pn7+R/6R/p0+pr6yPoS+zj7aPuY+8n75fsW/D38aPyY/MD86vwn/Wf9jv24/eD9CP4j/jr+Pf4="),
+    combo: new Audio("data:audio/wav;base64,UklGRhYBAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YeoAAACA/v/2/+//7f/2/wkAIgBFAFcAaAB3AIEAiACTAJoAqAC1AMMA0gDhAOkA7AD5AAcBFwEuAT8BUwFpAXoBhgGPAYsBggF4AWcBWAFFATIBHQEIAdIAewAbAL3+a/4A/qX9LP2/+0b74fqd+mD6Ifro+af5VvkK+ar4Tfjr95f3VPcY9/v28fbe9sL2rPaa9pv2kfaa9pb2rfbB9uP2Cfcj90D3Xfd995r3pve398f3zvfn9+v3+fcE+A==")
+};
+
+function playSound(type) {
+    if (playerProfile.soundEnabled) {
+        let snd = sfx[type];
+        if (snd) {
+            snd.currentTime = 0;
+            snd.play().catch(e => console.log("Audio play prevented by browser"));
+        }
+    }
+}
+
+// Attach click sounds to UI
+document.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if(!btn.classList.contains('btn-disabled')) playSound('click');
+    });
+});
+
+// --- DATA ---
 const ACHIEVEMENTS = [
     { id: 'first_game', icon: '🎮', title: 'First Game', desc: 'Complete your first game.', condition: (p) => p.gamesPlayed >= 1 },
     { id: 'score_50', icon: '💯', title: 'Half Century', desc: 'Score 50 points in a single game.', condition: (p) => p.bestScore >= 50 },
@@ -97,7 +124,6 @@ const ACHIEVEMENTS = [
     { id: 'shopper', icon: '🛍️', title: 'Big Spender', desc: 'Unlock 5 different colors.', condition: (p) => p.unlockedColors.length >= 5 }
 ];
 
-// --- DATA: SHOP ---
 const SHOP_COLORS = [
     { name: 'Red', hex: '#EF4444', cost: 0 }, { name: 'Blue', hex: '#3B82F6', cost: 0 }, { name: 'Green', hex: '#10B981', cost: 0 },
     { name: 'Purple', hex: '#8B5CF6', cost: 100 }, { name: 'Yellow', hex: '#F59E0B', cost: 250 }, { name: 'Orange', hex: '#F97316', cost: 500 },
@@ -147,7 +173,9 @@ function init() {
         if(!playerProfile.unlockedShapes) playerProfile.unlockedShapes = ['Circle', 'Square'];
         if(!playerProfile.targetShape) playerProfile.targetShape = 'Circle';
         if(!playerProfile.unlockedAchievements) playerProfile.unlockedAchievements = [];
+        if(playerProfile.soundEnabled === undefined) playerProfile.soundEnabled = true;
         
+        toggleSound.checked = playerProfile.soundEnabled;
         applySettings(); updateHomeUI(); showScreen(screenHome);
     } else {
         showScreen(screenStart);
@@ -187,7 +215,7 @@ btnNextCountry.addEventListener('click', () => { playerProfile.country = selectC
 btnAges.forEach(btn => { btn.addEventListener('click', () => { btnAges.forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); playerProfile.age = btn.getAttribute('data-age'); btnFinishOnboarding.disabled = false; btnFinishOnboarding.classList.remove('btn-disabled'); }); });
 btnFinishOnboarding.addEventListener('click', () => {
     playerProfile.unlockedLevel = 1; playerProfile.targetColor = 'Red'; playerProfile.targetShape = 'Circle'; playerProfile.coins = 0; playerProfile.unlockedAchievements = [];
-    playerProfile.unlockedColors = ['Red', 'Blue', 'Green']; playerProfile.unlockedShapes = ['Circle', 'Square'];
+    playerProfile.unlockedColors = ['Red', 'Blue', 'Green']; playerProfile.unlockedShapes = ['Circle', 'Square']; playerProfile.soundEnabled = true;
     saveProfile(); applySettings(); updateHomeUI(); showScreen(screenHome);
 });
 
@@ -206,6 +234,12 @@ function updateHomeUI() {
 btnGoLevelSelect.addEventListener('click', () => { buildLevelList(); showScreen(screenLevelSelect); });
 btnGoSettings.addEventListener('click', () => { showScreen(screenSettings); });
 btnBackSettings.addEventListener('click', () => { showScreen(screenHome); });
+
+// Settings Toggle
+toggleSound.addEventListener('change', () => {
+    playerProfile.soundEnabled = toggleSound.checked;
+    saveProfile();
+});
 
 // --- ACHIEVEMENTS LOGIC ---
 btnGoAchievements.addEventListener('click', () => { renderAchievements(); showScreen(screenAchievements); });
@@ -291,13 +325,26 @@ function buildLevelList() {
     });
 }
 btnStartGame.addEventListener('click', () => { currentLevelConfig = LEVELS.find(l => l.id === selectedLevelId); startGetReadyPhase(); });
+
 function startGetReadyPhase() {
     readyLevelText.innerText = `LEVEL ${currentLevelConfig.id}`; readyTimeText.innerText = `${currentLevelConfig.time} SECONDS`; readyCountdown.innerText = '3'; showScreen(screenReady);
     let count = 3; clearInterval(countdownInterval);
-    countdownInterval = setInterval(() => { count--; if (count > 0) readyCountdown.innerText = count; else if (count === 0) readyCountdown.innerText = 'GO!'; else { clearInterval(countdownInterval); startGame(); } }, 1000);
+    countdownInterval = setInterval(() => { 
+        count--; 
+        if (count > 0) {
+            readyCountdown.innerText = count;
+        } else if (count === 0) {
+            readyCountdown.innerText = 'GO!';
+            playSound('combo');
+        } else { 
+            clearInterval(countdownInterval); startGame(); 
+        } 
+    }, 1000);
 }
+
 btnRestart.addEventListener('click', startGetReadyPhase);
 target.addEventListener('pointerdown', handleTargetHit);
+
 function startGame() {
     score = 0; combo = 0; maxCombo = 0; timeLeft = currentLevelConfig.time; isPlaying = true;
     target.style.width = `${currentLevelConfig.size}px`; target.style.height = `${currentLevelConfig.size}px`;
@@ -306,7 +353,21 @@ function startGame() {
     target.style.display = 'block'; moveTarget();
 }
 function updateTimer() { if (!isPlaying) return; timeLeft--; uiTime.innerText = timeLeft; if (timeLeft <= 0) endGame(); }
-function handleTargetHit(e) { if (!isPlaying) return; e.preventDefault(); score++; combo++; if (combo > maxCombo) maxCombo = combo; uiScore.innerText = score; uiCombo.innerText = `${combo}🔥`; moveTarget(); }
+function handleTargetHit(e) { 
+    if (!isPlaying) return; 
+    e.preventDefault(); 
+    
+    score++; combo++; 
+    if (combo > maxCombo) maxCombo = combo; 
+    
+    uiScore.innerText = score; uiCombo.innerText = `${combo}🔥`; 
+    
+    playSound('tap');
+    if(combo === 10 || combo === 20 || combo === 30) playSound('combo');
+
+    moveTarget(); 
+}
+
 function moveTarget() {
     const areaRect = playArea.getBoundingClientRect(); const maxX = areaRect.width - currentLevelConfig.size - 20; const maxY = areaRect.height - currentLevelConfig.size - 20;
     const randomX = Math.floor(Math.random() * maxX) + 10; const randomY = Math.floor(Math.random() * maxY) + 10;
@@ -319,11 +380,9 @@ function endGame() {
 
     let oldBest = playerProfile.bestScore; let oldLast = playerProfile.lastScore;
     
-    // UPDATED COIN MATH: 1 Score = 2 Coins
     let coinsEarned = score * 2;
     playerProfile.coins += coinsEarned;
 
-    // Feedback logic
     if (score > oldBest && oldBest > 0) { feedbackMessage.innerText = '🏆 NEW PERSONAL BEST!'; feedbackMessage.style.color = '#10B981'; } 
     else if (score > oldLast && oldLast > 0) { feedbackMessage.innerText = `🎉 +${score - oldLast} IMPROVEMENT!`; feedbackMessage.style.color = '#4F46E5'; } 
     else if (score === oldLast && oldLast > 0) { feedbackMessage.innerText = '😎 SO CLOSE! TIE!'; feedbackMessage.style.color = '#F59E0B'; } 
@@ -333,17 +392,15 @@ function endGame() {
     playerProfile.gamesPlayed++; playerProfile.totalScore += score; playerProfile.lastScore = score;
     if (score > playerProfile.bestScore) playerProfile.bestScore = score;
 
-    // Level check
     let newlyUnlocked = false; let maxQualify = 1;
     for(let i=0; i<LEVELS.length; i++){ if(playerProfile.bestScore >= LEVELS[i].unlockReq) maxQualify = LEVELS[i].id; }
     if (maxQualify > playerProfile.unlockedLevel) { playerProfile.unlockedLevel = maxQualify; newlyUnlocked = true; }
 
-    // Achievements Check
     const newAchievements = checkAchievements();
-
     saveProfile();
 
-    // Populate Results
+    playSound('over');
+
     resultLevel.innerText = `${currentLevelConfig.id} (${currentLevelConfig.time}s)`;
     resultScore.innerText = score;
     resultCoins.innerText = formatNumber(coinsEarned);
@@ -352,7 +409,6 @@ function endGame() {
     if (newlyUnlocked) { unlockMessage.innerText = `🎉 LEVEL ${playerProfile.unlockedLevel} UNLOCKED!`; unlockMessage.style.display = 'block'; } 
     else { unlockMessage.style.display = 'none'; }
 
-    // Show achievement toast if earned
     if(newAchievements.length > 0) {
         achievementToastName.innerText = newAchievements[0].title;
         achievementToast.style.display = 'block';

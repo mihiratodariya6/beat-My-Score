@@ -97,17 +97,17 @@
             </div>
 
             <div class="home-actions">
-                <button id="btn-go-level-select" class="btn-huge">▶ TAP TO PLAY</button>
-                <button id="btn-go-achievements" class="btn-secondary">🏆 ACHIEVEMENTS</button>
-                <button id="btn-go-shop" class="btn-secondary" style="background:#F59E0B; color:white;">🛒 ITEM SHOP</button>
-                <button id="btn-go-settings" class="btn-secondary">⚙ SETTINGS</button>
+                <button id="btn-go-level-select" class="btn-huge sound-btn">▶ TAP TO PLAY</button>
+                <button id="btn-go-achievements" class="btn-secondary sound-btn">🏆 ACHIEVEMENTS</button>
+                <button id="btn-go-shop" class="btn-secondary sound-btn" style="background:#F59E0B; color:white;">🛒 ITEM SHOP</button>
+                <button id="btn-go-settings" class="btn-secondary sound-btn">⚙ SETTINGS</button>
             </div>
         </div>
 
         <!-- ACHIEVEMENTS SCREEN -->
         <div id="screen-achievements" class="screen">
             <div class="header-with-back">
-                <button id="btn-back-achievements" class="btn-icon">🔙</button>
+                <button id="btn-back-achievements" class="btn-icon sound-btn">🔙</button>
                 <h2 class="page-title">Achievements</h2>
             </div>
             
@@ -122,7 +122,7 @@
         <div id="screen-shop" class="screen">
             <div class="header-with-back" style="justify-content: space-between;">
                 <div style="display:flex; align-items:center; gap:16px;">
-                    <button id="btn-back-shop" class="btn-icon">🔙</button>
+                    <button id="btn-back-shop" class="btn-icon sound-btn">🔙</button>
                     <h2 class="page-title">Shop</h2>
                 </div>
                 <div class="coin-display">
@@ -131,8 +131,8 @@
             </div>
             
             <div class="shop-tabs">
-                <button id="tab-colors" class="shop-tab active">Colors</button>
-                <button id="tab-shapes" class="shop-tab">Designs</button>
+                <button id="tab-colors" class="shop-tab active sound-btn">Colors</button>
+                <button id="tab-shapes" class="shop-tab sound-btn">Designs</button>
             </div>
 
             <div id="shop-container-colors" class="shop-grid"></div>
@@ -142,7 +142,7 @@
         <!-- SETTINGS SCREEN -->
         <div id="screen-settings" class="screen">
             <div class="header-with-back">
-                <button id="btn-back-settings" class="btn-icon">🔙</button>
+                <button id="btn-back-settings" class="btn-icon sound-btn">🔙</button>
                 <h2 class="page-title">Settings</h2>
             </div>
             
@@ -151,18 +151,21 @@
             
             <div class="settings-row">
                 <span>Sound Effects</span>
-                <span style="color:var(--text-muted);">Coming Soon</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggle-sound" checked>
+                    <span class="slider"></span>
+                </label>
             </div>
-            <div class="settings-row">
+            <div class="settings-row" style="opacity: 0.5;">
                 <span>Music</span>
-                <span style="color:var(--text-muted);">Coming Soon</span>
+                <span style="font-size:12px;">(Coming Later)</span>
             </div>
         </div>
 
         <!-- LEVEL SELECTION SCREEN -->
         <div id="screen-level-select" class="screen">
             <div class="header-with-back">
-                <button id="btn-back-home" class="btn-icon">🔙</button>
+                <button id="btn-back-home" class="btn-icon sound-btn">🔙</button>
                 <h2 class="page-title">Select Level</h2>
             </div>
             
@@ -170,7 +173,7 @@
 
             <div id="level-list" class="level-list"></div>
             
-            <button id="btn-start-game" class="btn-primary btn-disabled" disabled style="margin-top:auto;">START GAME</button>
+            <button id="btn-start-game" class="btn-primary btn-disabled sound-btn" disabled style="margin-top:auto;">START GAME</button>
         </div>
 
         <!-- GET READY SCREEN -->
@@ -236,8 +239,8 @@
                 </div>
             </div>
 
-            <button id="btn-result-home" class="btn-secondary" style="margin-bottom: 12px;">🏠 HOME</button>
-            <button id="btn-restart" class="btn-primary">🔄 PLAY AGAIN</button>
+            <button id="btn-result-home" class="btn-secondary sound-btn" style="margin-bottom: 12px;">🏠 HOME</button>
+            <button id="btn-restart" class="btn-primary sound-btn">🔄 PLAY AGAIN</button>
         </div>
     </div>
 
