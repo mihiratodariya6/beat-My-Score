@@ -6,6 +6,7 @@ const screenGender = document.getElementById('screen-gender');
 const screenCountry = document.getElementById('screen-country');
 const screenAge = document.getElementById('screen-age');
 const screenHome = document.getElementById('screen-home');
+const screenSettings = document.getElementById('screen-settings');
 const screenLevelSelect = document.getElementById('screen-level-select');
 const screenReady = document.getElementById('screen-ready');
 const screenGame = document.getElementById('screen-game');
@@ -31,6 +32,11 @@ const homeBestScore = document.getElementById('home-best-score');
 const homeTotalScore = document.getElementById('home-total-score');
 const homeGamesPlayed = document.getElementById('home-games-played');
 const btnGoLevelSelect = document.getElementById('btn-go-level-select');
+const btnGoSettings = document.getElementById('btn-go-settings');
+
+// Settings Elements
+const btnBackSettings = document.getElementById('btn-back-settings');
+const colorOptions = document.querySelectorAll('.color-option');
 
 // Level Select Elements
 const btnBackHome = document.getElementById('btn-back-home');
@@ -67,10 +73,11 @@ let playerProfile = {
     country: '',
     age: '',
     bestScore: 0,
-    totalScore: 0, // NEW
-    lastScore: 0,  // NEW
+    totalScore: 0,
+    lastScore: 0,
     gamesPlayed: 0,
-    unlockedLevel: 1
+    unlockedLevel: 1,
+    targetColor: '#EF4444' // NEW: Default Red
 };
 
 // Level Definitions
@@ -115,11 +122,28 @@ function init() {
         if(!playerProfile.unlockedLevel) playerProfile.unlockedLevel = 1; 
         if(!playerProfile.totalScore) playerProfile.totalScore = 0;
         if(!playerProfile.lastScore) playerProfile.lastScore = 0;
+        if(!playerProfile.targetColor) playerProfile.targetColor = '#EF4444';
+        
+        applySettings();
         updateHomeUI();
         showScreen(screenHome);
     } else {
         showScreen(screenStart);
     }
+}
+
+function applySettings() {
+    // Set CSS variable for target color
+    document.documentElement.style.setProperty('--target-color', playerProfile.targetColor);
+    
+    // Update Settings UI selection
+    colorOptions.forEach(opt => {
+        if(opt.getAttribute('data-color') === playerProfile.targetColor) {
+            opt.classList.add('selected');
+        } else {
+            opt.classList.remove('selected');
+        }
+    });
 }
 
 function populateCountries() {
@@ -189,7 +213,11 @@ btnAges.forEach(btn => {
 });
 btnFinishOnboarding.addEventListener('click', () => {
     playerProfile.unlockedLevel = 1;
-    saveProfile(); updateHomeUI(); showScreen(screenHome);
+    playerProfile.targetColor = '#EF4444'; // Default Red
+    saveProfile();
+    applySettings(); 
+    updateHomeUI(); 
+    showScreen(screenHome);
 });
 
 // --- HOME LOGIC ---
@@ -203,7 +231,6 @@ function updateHomeUI() {
     displayCountry.innerText = flag;
     displayLevelBadge.innerText = `LEVEL ${playerProfile.unlockedLevel}`;
     
-    // Updated 3 columns
     homeBestScore.innerText = playerProfile.bestScore;
     homeTotalScore.innerText = playerProfile.totalScore;
     homeGamesPlayed.innerText = playerProfile.gamesPlayed;
@@ -213,9 +240,28 @@ btnGoLevelSelect.addEventListener('click', () => {
     buildLevelList();
     showScreen(screenLevelSelect);
 });
-btnBackHome.addEventListener('click', () => { showScreen(screenHome); });
+btnGoSettings.addEventListener('click', () => {
+    showScreen(screenSettings);
+});
+
+// --- SETTINGS LOGIC ---
+btnBackSettings.addEventListener('click', () => {
+    showScreen(screenHome);
+});
+
+colorOptions.forEach(opt => {
+    opt.addEventListener('click', () => {
+        const color = opt.getAttribute('data-color');
+        playerProfile.targetColor = color;
+        saveProfile();
+        applySettings();
+    });
+});
+
 
 // --- LEVEL SELECTION LOGIC ---
+btnBackHome.addEventListener('click', () => { showScreen(screenHome); });
+
 function buildLevelList() {
     levelListContainer.innerHTML = '';
     btnStartGame.disabled = true;
@@ -349,37 +395,33 @@ function endGame() {
     clearInterval(gameInterval);
     target.style.display = 'none';
 
-    // Store old values before updating
     let oldBest = playerProfile.bestScore;
     let oldLast = playerProfile.lastScore;
 
-    // Feedback Message Logic
     if (score > oldBest && oldBest > 0) {
         feedbackMessage.innerText = '🏆 NEW PERSONAL BEST!';
-        feedbackMessage.style.color = '#10B981'; // Green
+        feedbackMessage.style.color = '#10B981'; 
     } else if (score > oldLast && oldLast > 0) {
         feedbackMessage.innerText = `🎉 +${score - oldLast} IMPROVEMENT!`;
-        feedbackMessage.style.color = '#4F46E5'; // Blue
+        feedbackMessage.style.color = '#4F46E5'; 
     } else if (score === oldLast && oldLast > 0) {
         feedbackMessage.innerText = '😎 SO CLOSE! TIE!';
-        feedbackMessage.style.color = '#F59E0B'; // Orange
+        feedbackMessage.style.color = '#F59E0B'; 
     } else if (oldLast > 0) {
         feedbackMessage.innerText = '💪 KEEP GOING! TRY AGAIN';
-        feedbackMessage.style.color = '#EF4444'; // Red
+        feedbackMessage.style.color = '#EF4444'; 
     } else {
         feedbackMessage.innerText = '🎮 GREAT FIRST GAME!';
         feedbackMessage.style.color = '#4F46E5';
     }
 
-    // Update Player Profile Data
     playerProfile.gamesPlayed++;
-    playerProfile.totalScore += score; // Adding to Total Score
+    playerProfile.totalScore += score;
     playerProfile.lastScore = score;
     if (score > playerProfile.bestScore) {
         playerProfile.bestScore = score;
     }
 
-    // Level Unlock Logic
     let newlyUnlocked = false;
     let maxQualify = 1;
     for(let i=0; i<LEVELS.length; i++){
@@ -394,7 +436,6 @@ function endGame() {
 
     saveProfile();
 
-    // Populate Result UI
     resultLevel.innerText = `${currentLevelConfig.id} (${currentLevelConfig.time}s)`;
     resultLastPlay.innerText = oldLast;
     resultScore.innerText = score;
