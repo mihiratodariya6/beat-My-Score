@@ -75,12 +75,17 @@
                 
                 <div class="profile-stats-new">
                     <div class="stat-col-new">
-                        <span class="stat-lbl-new">BEST SCORE</span>
+                        <span class="stat-lbl-new">BEST</span>
                         <span id="home-best-score" class="stat-val-new">0</span>
                     </div>
                     <div class="stat-divider"></div>
                     <div class="stat-col-new">
-                        <span class="stat-lbl-new">GAMES PLAYED</span>
+                        <span class="stat-lbl-new">TOTAL</span>
+                        <span id="home-total-score" class="stat-val-new">0</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-col-new">
+                        <span class="stat-lbl-new">GAMES</span>
                         <span id="home-games-played" class="stat-val-new">0</span>
                     </div>
                 </div>
@@ -141,26 +146,32 @@
 
         <!-- RESULT SCREEN -->
         <div id="screen-result" class="screen">
-            <h2>🎯 GAME COMPLETE</h2>
+            <h2>🎯 GAME OVER</h2>
             
             <div id="unlock-message" class="unlock-message" style="display: none;">
                 🎉 LEVEL 2 UNLOCKED!
             </div>
 
+            <h3 id="feedback-message" class="feedback-msg">🎮 GREAT FIRST GAME!</h3>
+
             <div class="result-stats">
                 <div class="result-row">
-                    <span>Level:</span>
-                    <span id="result-level">1</span>
+                    <span>Level Played:</span>
+                    <span id="result-level">1 (30s)</span>
                 </div>
-                <div class="result-row">
-                    <span>Time:</span>
-                    <span id="result-time">30 SEC</span>
+                <div class="result-row" style="opacity: 0.7; font-size: 16px;">
+                    <span>Last Play:</span>
+                    <span id="result-last-play">0</span>
                 </div>
                 <div class="result-row highlight-row">
-                    <span>Score:</span>
+                    <span>LATEST SCORE:</span>
                     <span id="result-score">0</span>
                 </div>
-                <div class="result-row">
+                <div class="result-row" style="color: #4F46E5;">
+                    <span>All-Time Best:</span>
+                    <span id="result-best">0</span>
+                </div>
+                <div class="result-row" style="opacity: 0.7; font-size: 14px; margin-top: 8px;">
                     <span>Max Combo:</span>
                     <span id="result-combo">0</span>
                 </div>

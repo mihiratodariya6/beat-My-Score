@@ -28,6 +28,7 @@ const displayName = document.getElementById('display-name');
 const displayCountry = document.getElementById('display-country');
 const displayLevelBadge = document.getElementById('display-level-badge');
 const homeBestScore = document.getElementById('home-best-score');
+const homeTotalScore = document.getElementById('home-total-score');
 const homeGamesPlayed = document.getElementById('home-games-played');
 const btnGoLevelSelect = document.getElementById('btn-go-level-select');
 
@@ -50,9 +51,11 @@ const target = document.getElementById('target');
 
 // Result Elements
 const resultLevel = document.getElementById('result-level');
-const resultTime = document.getElementById('result-time');
+const resultLastPlay = document.getElementById('result-last-play');
 const resultScore = document.getElementById('result-score');
+const resultBest = document.getElementById('result-best');
 const resultCombo = document.getElementById('result-combo');
+const feedbackMessage = document.getElementById('feedback-message');
 const unlockMessage = document.getElementById('unlock-message');
 const btnResultHome = document.getElementById('btn-result-home');
 const btnRestart = document.getElementById('btn-restart');
@@ -64,17 +67,19 @@ let playerProfile = {
     country: '',
     age: '',
     bestScore: 0,
+    totalScore: 0, // NEW
+    lastScore: 0,  // NEW
     gamesPlayed: 0,
-    unlockedLevel: 1 // Max level unlocked
+    unlockedLevel: 1
 };
 
 // Level Definitions
 const LEVELS = [
     { id: 1, time: 30, size: 80, unlockReq: 0 },
-    { id: 2, time: 45, size: 70, unlockReq: 50 }, // Unlock if bestScore >= 50
-    { id: 3, time: 60, size: 60, unlockReq: 100 }, // Unlock if bestScore >= 100
-    { id: 4, time: 90, size: 50, unlockReq: 180 }, // Unlock if bestScore >= 180
-    { id: 5, time: 120, size: 40, unlockReq: 300 } // Unlock if bestScore >= 300
+    { id: 2, time: 45, size: 70, unlockReq: 50 },
+    { id: 3, time: 60, size: 60, unlockReq: 100 },
+    { id: 4, time: 90, size: 50, unlockReq: 180 },
+    { id: 5, time: 120, size: 40, unlockReq: 300 }
 ];
 
 let selectedLevelId = 1;
@@ -106,8 +111,10 @@ function init() {
     loadProfile();
     
     if (playerProfile.name && playerProfile.gender && playerProfile.country && playerProfile.age) {
-        // Ensure unlockedLevel exists for old saves
+        // Ensure new variables exist for old saves
         if(!playerProfile.unlockedLevel) playerProfile.unlockedLevel = 1; 
+        if(!playerProfile.totalScore) playerProfile.totalScore = 0;
+        if(!playerProfile.lastScore) playerProfile.lastScore = 0;
         updateHomeUI();
         showScreen(screenHome);
     } else {
@@ -140,7 +147,7 @@ function showScreen(screenElement) {
     screenElement.classList.add('active');
 }
 
-// --- ONBOARDING LOGIC (same as before) ---
+// --- ONBOARDING LOGIC ---
 btnStartOnboarding.addEventListener('click', () => {
     if(playerProfile.name) localStorage.removeItem('beatMyScoreProfile'); 
     showScreen(screenName);
@@ -191,10 +198,14 @@ function updateHomeUI() {
     if (playerProfile.gender === 'Male') displayAvatar.innerText = '👨';
     else if (playerProfile.gender === 'Female') displayAvatar.innerText = '👩';
     else displayAvatar.innerText = '👤';
+    
     const flag = playerProfile.country.split(' ')[0];
     displayCountry.innerText = flag;
     displayLevelBadge.innerText = `LEVEL ${playerProfile.unlockedLevel}`;
+    
+    // Updated 3 columns
     homeBestScore.innerText = playerProfile.bestScore;
+    homeTotalScore.innerText = playerProfile.totalScore;
     homeGamesPlayed.innerText = playerProfile.gamesPlayed;
 }
 
@@ -212,7 +223,6 @@ function buildLevelList() {
 
     LEVELS.forEach(lvl => {
         const isUnlocked = playerProfile.unlockedLevel >= lvl.id;
-        
         const card = document.createElement('div');
         card.className = `level-card ${isUnlocked ? '' : 'locked'}`;
         if (isUnlocked && lvl.id === selectedLevelId) card.classList.add('selected');
@@ -233,8 +243,6 @@ function buildLevelList() {
                 btnStartGame.disabled = false;
                 btnStartGame.classList.remove('btn-disabled');
             });
-            
-            // Auto enable button if currently selected is clicked
             if(lvl.id === selectedLevelId) {
                 btnStartGame.disabled = false;
                 btnStartGame.classList.remove('btn-disabled');
@@ -282,7 +290,6 @@ function startGame() {
     timeLeft = currentLevelConfig.time;
     isPlaying = true;
 
-    // Apply target size for current level
     target.style.width = `${currentLevelConfig.size}px`;
     target.style.height = `${currentLevelConfig.size}px`;
 
@@ -303,7 +310,6 @@ function updateTimer() {
     if (!isPlaying) return;
     timeLeft--;
     uiTime.innerText = timeLeft;
-
     if (timeLeft <= 0) {
         endGame();
     }
@@ -343,23 +349,44 @@ function endGame() {
     clearInterval(gameInterval);
     target.style.display = 'none';
 
+    // Store old values before updating
+    let oldBest = playerProfile.bestScore;
+    let oldLast = playerProfile.lastScore;
+
+    // Feedback Message Logic
+    if (score > oldBest && oldBest > 0) {
+        feedbackMessage.innerText = '🏆 NEW PERSONAL BEST!';
+        feedbackMessage.style.color = '#10B981'; // Green
+    } else if (score > oldLast && oldLast > 0) {
+        feedbackMessage.innerText = `🎉 +${score - oldLast} IMPROVEMENT!`;
+        feedbackMessage.style.color = '#4F46E5'; // Blue
+    } else if (score === oldLast && oldLast > 0) {
+        feedbackMessage.innerText = '😎 SO CLOSE! TIE!';
+        feedbackMessage.style.color = '#F59E0B'; // Orange
+    } else if (oldLast > 0) {
+        feedbackMessage.innerText = '💪 KEEP GOING! TRY AGAIN';
+        feedbackMessage.style.color = '#EF4444'; // Red
+    } else {
+        feedbackMessage.innerText = '🎮 GREAT FIRST GAME!';
+        feedbackMessage.style.color = '#4F46E5';
+    }
+
+    // Update Player Profile Data
     playerProfile.gamesPlayed++;
+    playerProfile.totalScore += score; // Adding to Total Score
+    playerProfile.lastScore = score;
     if (score > playerProfile.bestScore) {
         playerProfile.bestScore = score;
     }
 
-    // Check for level unlocks
+    // Level Unlock Logic
     let newlyUnlocked = false;
-    let oldLevel = playerProfile.unlockedLevel;
-    
-    // Find highest level user qualifies for
     let maxQualify = 1;
     for(let i=0; i<LEVELS.length; i++){
         if(playerProfile.bestScore >= LEVELS[i].unlockReq) {
             maxQualify = LEVELS[i].id;
         }
     }
-
     if (maxQualify > playerProfile.unlockedLevel) {
         playerProfile.unlockedLevel = maxQualify;
         newlyUnlocked = true;
@@ -367,10 +394,11 @@ function endGame() {
 
     saveProfile();
 
-    // Show result UI
-    resultLevel.innerText = currentLevelConfig.id;
-    resultTime.innerText = `${currentLevelConfig.time} SEC`;
+    // Populate Result UI
+    resultLevel.innerText = `${currentLevelConfig.id} (${currentLevelConfig.time}s)`;
+    resultLastPlay.innerText = oldLast;
     resultScore.innerText = score;
+    resultBest.innerText = playerProfile.bestScore;
     resultCombo.innerText = maxCombo;
 
     if (newlyUnlocked) {
