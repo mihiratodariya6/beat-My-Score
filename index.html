@@ -98,16 +98,40 @@
 
             <div class="home-actions">
                 <button id="btn-go-level-select" class="btn-huge sound-btn">▶ TAP TO PLAY</button>
-                <button id="btn-go-achievements" class="btn-secondary sound-btn">🏆 ACHIEVEMENTS</button>
+                <button id="btn-go-scoreboard" class="btn-secondary sound-btn">🏆 SCOREBOARD</button>
+                <button id="btn-go-achievements" class="btn-secondary sound-btn">⭐ ACHIEVEMENTS</button>
                 <button id="btn-go-shop" class="btn-secondary sound-btn" style="background:#F59E0B; color:white;">🛒 ITEM SHOP</button>
                 <button id="btn-go-settings" class="btn-secondary sound-btn">⚙ SETTINGS</button>
+            </div>
+        </div>
+
+        <!-- SCOREBOARD SCREEN -->
+        <div id="screen-scoreboard" class="screen">
+            <div class="header-with-back" style="justify-content: space-between;">
+                <div style="display:flex; align-items:center; gap:16px;">
+                    <button id="btn-back-scoreboard" class="btn-icon sound-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <h2 class="page-title">Leaderboard</h2>
+                </div>
+            </div>
+
+            <div class="shop-tabs" style="margin-top: 12px;">
+                <button id="tab-world" class="shop-tab active sound-btn">🌎 World</button>
+                <button id="tab-local" class="shop-tab sound-btn">📍 Country</button>
+            </div>
+
+            <div id="scoreboard-list" class="scoreboard-list">
+                <!-- Populated by JS -->
             </div>
         </div>
 
         <!-- ACHIEVEMENTS SCREEN -->
         <div id="screen-achievements" class="screen">
             <div class="header-with-back">
-                <button id="btn-back-achievements" class="btn-icon sound-btn">🔙</button>
+                <button id="btn-back-achievements" class="btn-icon sound-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
                 <h2 class="page-title">Achievements</h2>
             </div>
             
@@ -122,7 +146,9 @@
         <div id="screen-shop" class="screen">
             <div class="header-with-back" style="justify-content: space-between;">
                 <div style="display:flex; align-items:center; gap:16px;">
-                    <button id="btn-back-shop" class="btn-icon sound-btn">🔙</button>
+                    <button id="btn-back-shop" class="btn-icon sound-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
                     <h2 class="page-title">Shop</h2>
                 </div>
                 <div class="coin-display">
@@ -142,7 +168,9 @@
         <!-- SETTINGS SCREEN -->
         <div id="screen-settings" class="screen">
             <div class="header-with-back">
-                <button id="btn-back-settings" class="btn-icon sound-btn">🔙</button>
+                <button id="btn-back-settings" class="btn-icon sound-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
                 <h2 class="page-title">Settings</h2>
             </div>
             
@@ -165,7 +193,9 @@
         <!-- LEVEL SELECTION SCREEN -->
         <div id="screen-level-select" class="screen">
             <div class="header-with-back">
-                <button id="btn-back-home" class="btn-icon sound-btn">🔙</button>
+                <button id="btn-back-home" class="btn-icon sound-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
                 <h2 class="page-title">Select Level</h2>
             </div>
             
@@ -213,7 +243,6 @@
                 🎉 LEVEL 2 UNLOCKED!
             </div>
             
-            <!-- Toast notification for achievements -->
             <div id="achievement-toast" class="achievement-toast" style="display: none;">
                 🏆 Achievement Unlocked: <br><strong id="achievement-toast-name">Name</strong>
             </div>

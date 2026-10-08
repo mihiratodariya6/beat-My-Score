@@ -9,6 +9,7 @@ const screenHome = document.getElementById('screen-home');
 const screenSettings = document.getElementById('screen-settings');
 const screenShop = document.getElementById('screen-shop');
 const screenAchievements = document.getElementById('screen-achievements');
+const screenScoreboard = document.getElementById('screen-scoreboard');
 const screenLevelSelect = document.getElementById('screen-level-select');
 const screenReady = document.getElementById('screen-ready');
 const screenGame = document.getElementById('screen-game');
@@ -38,8 +39,15 @@ const btnGoLevelSelect = document.getElementById('btn-go-level-select');
 const btnGoSettings = document.getElementById('btn-go-settings');
 const btnGoShop = document.getElementById('btn-go-shop');
 const btnGoAchievements = document.getElementById('btn-go-achievements');
+const btnGoScoreboard = document.getElementById('btn-go-scoreboard');
+
 const btnBackAchievements = document.getElementById('btn-back-achievements');
 const achievementsList = document.getElementById('achievements-list');
+
+const btnBackScoreboard = document.getElementById('btn-back-scoreboard');
+const tabWorld = document.getElementById('tab-world');
+const tabLocal = document.getElementById('tab-local');
+const scoreboardList = document.getElementById('scoreboard-list');
 
 const btnBackShop = document.getElementById('btn-back-shop');
 const shopCoins = document.getElementById('shop-coins');
@@ -87,29 +95,22 @@ let playerProfile = {
     soundEnabled: true
 };
 
-// --- BASE64 SOUNDS (Tiny, immediate loading) ---
+// --- BASE64 SOUNDS ---
 const sfx = {
     tap: new Audio("data:audio/wav;base64,UklGRmYBAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUMBAACA/v/7//f/6//e/83/uf+a/3b/UP8o/wD//P72/vL+3/7S/sz+2/7X/s7+rf6P/n7+Vv4y/hT+8/3h/dX95/3V/cz9vf2g/YH9Vv0j/Qj97Pzm/Nz83/zc/Nz8zvyq/IT8Wvw//Bz88fvh++D72vvR+837tPua+3v7YftM+z/7H/v/+9v7nfsS+x/7Tvsj+zj7KPsT+/T66Prh+tX61/rT+rn6m/p++k76Ifre+Z/5Yfkr+eH4tPh2+FL4NPgc+A=="),
     click: new Audio("data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAAAACA/v/3/+//5//j/+b/4v/b/87/x//E/8f/wf+w/5X/c/9K/yH/9v7f/r7+lv5w/kz+Mv4S/vb93f25/Zn9c/1Q/Tb9Hf0J/fj83/y4/Jr8jPxs/FT8I/z1+9b7rvuV+2H7Kvv7+t/6nPpG+v757Pk="),
     over: new Audio("data:audio/wav;base64,UklGRq4AAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YIgAAACA/v/0/9X/p/92/zn/+v7Q/pr+Xv4W/db8gvws/Nb7ifsz+/r6x/qU+l76IPr4+cL5jvlB+fv4wPiO+E/4Evjp98v3uvfL99X30vfb9+r3/fcO+Cb4Qvh++KT41Pj5+Bn5Qfl0+ab51Pn7+R/6R/p0+pr6yPoS+zj7aPuY+8n75fsW/D38aPyY/MD86vwn/Wf9jv24/eD9CP4j/jr+Pf4="),
-    combo: new Audio("data:audio/wav;base64,UklGRhYBAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YeoAAACA/v/2/+//7f/2/wkAIgBFAFcAaAB3AIEAiACTAJoAqAC1AMMA0gDhAOkA7AD5AAcBFwEuAT8BUwFpAXoBhgGPAYsBggF4AWcBWAFFATIBHQEIAdIAewAbAL3+a/4A/qX9LP2/+0b74fqd+mD6Ifro+af5VvkK+ar4Tfjr95f3VPcY9/v28fbe9sL2rPaa9pv2kfaa9pb2rfbB9uP2Cfcj90D3Xfd995r3pve398f3zvfn9+v3+fcE+A==")
+    combo: new Audio("data:audio/wav;base64,UklGRhYBAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YeoAAACA/v/2/+//7f/2/wkAIgBFAFcAaAB3AIEAiACTAJoAqAC1AMMA0gDhAOkA7AD5AAcBFwEuAT8BUwFpAXoBhgGPAYsBggF4AWcBWAFFATIBHQEIAdIAewAbAL3+a/4A/qX9LP2/+0b74fqd+mD6Ifro+af5VvkK+ar4Tfjr95f3VPcY9/v28fbe9sL2rPaa9pv2kfaa9pb2rfbB9uP2Cfcj90D3Xfd995r3pve398f33/fn9+v3+fcE+A==")
 };
 
 function playSound(type) {
     if (playerProfile.soundEnabled) {
         let snd = sfx[type];
-        if (snd) {
-            snd.currentTime = 0;
-            snd.play().catch(e => console.log("Audio play prevented by browser"));
-        }
+        if (snd) { snd.currentTime = 0; snd.play().catch(e => console.log("Audio prevented")); }
     }
 }
-
-// Attach click sounds to UI
 document.querySelectorAll('button').forEach(btn => {
-    btn.addEventListener('click', () => {
-        if(!btn.classList.contains('btn-disabled')) playSound('click');
-    });
+    btn.addEventListener('click', () => { if(!btn.classList.contains('btn-disabled')) playSound('click'); });
 });
 
 // --- DATA ---
@@ -157,11 +158,22 @@ const LEVELS = [
     { id: 3, time: 60, size: 60, unlockReq: 100 }, { id: 4, time: 90, size: 50, unlockReq: 180 }, { id: 5, time: 120, size: 40, unlockReq: 300 }
 ];
 
+// --- DUMMY SCOREBOARD DATA ---
+const DUMMY_WORLD = [
+    { name: 'Alex', country: '🇺🇸 USA', score: 450 },
+    { name: 'Rahul', country: '🇮🇳 India', score: 420 },
+    { name: 'Chen', country: '🇨🇳 China', score: 380 },
+    { name: 'Maria', country: '🇧🇷 Brazil', score: 350 },
+    { name: 'David', country: '🇬🇧 UK', score: 310 },
+    { name: 'Ken', country: '🇯🇵 Japan', score: 290 },
+    { name: 'Ali', country: '🇦🇪 UAE', score: 275 }
+];
+
+const worldCountries = ["🇮🇳 India", "🇺🇸 USA", "🇬🇧 UK", "🇨🇦 Canada", "🇦🇺 Australia", "🌎 Other"];
+
 let selectedLevelId = 1; let currentLevelConfig = null;
 let score = 0; let combo = 0; let maxCombo = 0; let timeLeft = 0;
 let gameInterval; let countdownInterval; let isPlaying = false;
-
-const worldCountries = ["🇮🇳 India", "🇺🇸 USA", "🇬🇧 UK", "🇨🇦 Canada", "🇦🇺 Australia", "🌎 Other"];
 
 // --- INITIALIZATION ---
 function init() {
@@ -204,7 +216,7 @@ function loadProfile() { const saved = localStorage.getItem('beatMyScoreProfile'
 function saveProfile() { localStorage.setItem('beatMyScoreProfile', JSON.stringify(playerProfile)); }
 function showScreen(screenElement) { screens.forEach(s => s.classList.remove('active')); screenElement.classList.add('active'); }
 
-// --- ONBOARDING LOGIC ---
+// --- ONBOARDING ---
 btnStartOnboarding.addEventListener('click', () => { if(playerProfile.name) localStorage.removeItem('beatMyScoreProfile'); showScreen(screenName); });
 inputName.addEventListener('input', () => { btnNextName.disabled = inputName.value.trim().length === 0; btnNextName.classList.toggle('btn-disabled', btnNextName.disabled); });
 btnNextName.addEventListener('click', () => { playerProfile.name = inputName.value.trim(); showScreen(screenGender); });
@@ -235,11 +247,54 @@ btnGoLevelSelect.addEventListener('click', () => { buildLevelList(); showScreen(
 btnGoSettings.addEventListener('click', () => { showScreen(screenSettings); });
 btnBackSettings.addEventListener('click', () => { showScreen(screenHome); });
 
-// Settings Toggle
-toggleSound.addEventListener('change', () => {
-    playerProfile.soundEnabled = toggleSound.checked;
-    saveProfile();
-});
+toggleSound.addEventListener('change', () => { playerProfile.soundEnabled = toggleSound.checked; saveProfile(); });
+
+// --- SCOREBOARD LOGIC (STEP 11) ---
+btnGoScoreboard.addEventListener('click', () => { renderScoreboard('world'); showScreen(screenScoreboard); });
+btnBackScoreboard.addEventListener('click', () => { showScreen(screenHome); });
+
+tabWorld.addEventListener('click', () => { tabWorld.classList.add('active'); tabLocal.classList.remove('active'); renderScoreboard('world'); });
+tabLocal.addEventListener('click', () => { tabLocal.classList.add('active'); tabWorld.classList.remove('active'); renderScoreboard('local'); });
+
+function renderScoreboard(type) {
+    scoreboardList.innerHTML = '';
+    
+    // Dynamic dummy data for local (simulating players from same country)
+    let DUMMY_LOCAL = [
+        { name: 'Amit', score: 390 }, { name: 'Priya', score: 340 }, { name: 'Vikram', score: 300 }, { name: 'Sneha', score: 280 }
+    ].map(u => ({ ...u, country: playerProfile.country }));
+
+    let baseData = type === 'world' ? DUMMY_WORLD : DUMMY_LOCAL;
+    
+    // Inject the real player into the dummy data to simulate live leaderboard
+    let allData = [...baseData];
+    allData.push({ name: playerProfile.name + ' (You)', country: playerProfile.country, score: playerProfile.bestScore, isPlayer: true });
+    
+    // Sort highest score first
+    allData.sort((a,b) => b.score - a.score);
+    // Assign ranks
+    allData.forEach((item, idx) => item.rank = idx + 1);
+
+    allData.forEach(p => {
+        const card = document.createElement('div');
+        card.className = `sb-card ${p.isPlayer ? 'highlight' : ''}`;
+        
+        let rankHtml = `<div class="sb-rank">${p.rank}</div>`;
+        if(p.rank === 1) rankHtml = `<div class="sb-rank gold">🥇</div>`;
+        if(p.rank === 2) rankHtml = `<div class="sb-rank silver">🥈</div>`;
+        if(p.rank === 3) rankHtml = `<div class="sb-rank bronze">🥉</div>`;
+
+        card.innerHTML = `
+            ${rankHtml}
+            <div class="sb-info">
+                <div class="sb-name">${p.name}</div>
+                <div class="sb-country">${p.country}</div>
+            </div>
+            <div class="sb-score">${p.score}</div>
+        `;
+        scoreboardList.appendChild(card);
+    });
+}
 
 // --- ACHIEVEMENTS LOGIC ---
 btnGoAchievements.addEventListener('click', () => { renderAchievements(); showScreen(screenAchievements); });
@@ -251,25 +306,15 @@ function renderAchievements() {
         const isUnlocked = playerProfile.unlockedAchievements.includes(ach.id);
         const card = document.createElement('div');
         card.className = `ach-card ${isUnlocked ? 'unlocked' : 'locked'}`;
-        card.innerHTML = `
-            <div class="ach-icon">${ach.icon}</div>
-            <div class="ach-info">
-                <div class="ach-title">${ach.title} ${isUnlocked ? '✔️' : ''}</div>
-                <div class="ach-desc">${ach.desc}</div>
-            </div>
-        `;
+        card.innerHTML = `<div class="ach-icon">${ach.icon}</div><div class="ach-info"><div class="ach-title">${ach.title} ${isUnlocked ? '✔️' : ''}</div><div class="ach-desc">${ach.desc}</div></div>`;
         achievementsList.appendChild(card);
     });
 }
-
 function checkAchievements() {
     let newAchievements = [];
     ACHIEVEMENTS.forEach(ach => {
         if (!playerProfile.unlockedAchievements.includes(ach.id)) {
-            if (ach.condition(playerProfile)) {
-                playerProfile.unlockedAchievements.push(ach.id);
-                newAchievements.push(ach);
-            }
+            if (ach.condition(playerProfile)) { playerProfile.unlockedAchievements.push(ach.id); newAchievements.push(ach); }
         }
     });
     return newAchievements;
@@ -287,9 +332,7 @@ function renderShop() {
         const isUnlocked = playerProfile.unlockedColors.includes(item.name);
         const isEquipped = playerProfile.targetColor === item.name;
         const canAfford = playerProfile.coins >= item.cost;
-        const card = document.createElement('div');
-        card.className = `shop-item ${isEquipped ? 'equipped' : ''}`;
-        
+        const card = document.createElement('div'); card.className = `shop-item ${isEquipped ? 'equipped' : ''}`;
         let btnHTML = isEquipped ? `<div class="btn-equipped">Equipped</div>` : (isUnlocked ? `<button class="btn-equip" onclick="equipItem('Color', '${item.name}')">Equip</button>` : `<button class="btn-buy ${canAfford ? '' : 'locked'}" onclick="buyItem('Color', '${item.name}', ${item.cost})">🪙 ${formatNumber(item.cost)}</button>`);
         card.innerHTML = `<div class="shop-item-preview-box"><div class="shop-item-preview" style="background-color: ${item.hex}; border-radius: 50%; border: ${item.hex === '#FFFFFF' ? '1px solid #ccc' : 'none'};"></div></div><div class="shop-item-name">${item.name}</div>${btnHTML}`;
         containerColors.appendChild(card);
@@ -300,9 +343,7 @@ function renderShop() {
         const isUnlocked = playerProfile.unlockedShapes.includes(item.name);
         const isEquipped = playerProfile.targetShape === item.name;
         const canAfford = playerProfile.coins >= item.cost;
-        const card = document.createElement('div');
-        card.className = `shop-item ${isEquipped ? 'equipped' : ''}`;
-        
+        const card = document.createElement('div'); card.className = `shop-item ${isEquipped ? 'equipped' : ''}`;
         let btnHTML = isEquipped ? `<div class="btn-equipped">Equipped</div>` : (isUnlocked ? `<button class="btn-equip" onclick="equipItem('Shape', '${item.name}')">Equip</button>` : `<button class="btn-buy ${canAfford ? '' : 'locked'}" onclick="buyItem('Shape', '${item.name}', ${item.cost})">🪙 ${formatNumber(item.cost)}</button>`);
         card.innerHTML = `<div class="shop-item-preview-box"><div class="shop-item-preview" style="background-color: var(--primary); border-radius: ${item.css}; clip-path: ${item.clipPath || 'none'}; transform: ${item.transform || 'none'}"></div></div><div class="shop-item-name">${item.name}</div>${btnHTML}`;
         containerShapes.appendChild(card);
@@ -331,14 +372,9 @@ function startGetReadyPhase() {
     let count = 3; clearInterval(countdownInterval);
     countdownInterval = setInterval(() => { 
         count--; 
-        if (count > 0) {
-            readyCountdown.innerText = count;
-        } else if (count === 0) {
-            readyCountdown.innerText = 'GO!';
-            playSound('combo');
-        } else { 
-            clearInterval(countdownInterval); startGame(); 
-        } 
+        if (count > 0) { readyCountdown.innerText = count; } 
+        else if (count === 0) { readyCountdown.innerText = 'GO!'; playSound('combo'); } 
+        else { clearInterval(countdownInterval); startGame(); } 
     }, 1000);
 }
 
@@ -356,15 +392,9 @@ function updateTimer() { if (!isPlaying) return; timeLeft--; uiTime.innerText = 
 function handleTargetHit(e) { 
     if (!isPlaying) return; 
     e.preventDefault(); 
-    
-    score++; combo++; 
-    if (combo > maxCombo) maxCombo = combo; 
-    
+    score++; combo++; if (combo > maxCombo) maxCombo = combo; 
     uiScore.innerText = score; uiCombo.innerText = `${combo}🔥`; 
-    
-    playSound('tap');
-    if(combo === 10 || combo === 20 || combo === 30) playSound('combo');
-
+    playSound('tap'); if(combo === 10 || combo === 20 || combo === 30) playSound('combo');
     moveTarget(); 
 }
 
@@ -379,9 +409,7 @@ function endGame() {
     isPlaying = false; clearInterval(gameInterval); target.style.display = 'none';
 
     let oldBest = playerProfile.bestScore; let oldLast = playerProfile.lastScore;
-    
-    let coinsEarned = score * 2;
-    playerProfile.coins += coinsEarned;
+    let coinsEarned = score * 2; playerProfile.coins += coinsEarned;
 
     if (score > oldBest && oldBest > 0) { feedbackMessage.innerText = '🏆 NEW PERSONAL BEST!'; feedbackMessage.style.color = '#10B981'; } 
     else if (score > oldLast && oldLast > 0) { feedbackMessage.innerText = `🎉 +${score - oldLast} IMPROVEMENT!`; feedbackMessage.style.color = '#4F46E5'; } 
@@ -398,7 +426,6 @@ function endGame() {
 
     const newAchievements = checkAchievements();
     saveProfile();
-
     playSound('over');
 
     resultLevel.innerText = `${currentLevelConfig.id} (${currentLevelConfig.time}s)`;
