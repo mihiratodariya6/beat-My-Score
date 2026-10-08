@@ -8,6 +8,7 @@
 </head>
 <body>
     <div id="app-container">
+        
         <!-- START SCREEN -->
         <div id="screen-start" class="screen">
             <h1 class="logo">🎯<br>Beat My Score</h1>
@@ -97,10 +98,23 @@
 
             <div class="home-actions">
                 <button id="btn-go-level-select" class="btn-huge">▶ TAP TO PLAY</button>
-                <button class="btn-secondary">🏆 SCOREBOARD</button>
-                <!-- Replaced Profile with Shop since Profile is visible above -->
+                <button id="btn-go-achievements" class="btn-secondary">🏆 ACHIEVEMENTS</button>
                 <button id="btn-go-shop" class="btn-secondary" style="background:#F59E0B; color:white;">🛒 ITEM SHOP</button>
                 <button id="btn-go-settings" class="btn-secondary">⚙ SETTINGS</button>
+            </div>
+        </div>
+
+        <!-- ACHIEVEMENTS SCREEN -->
+        <div id="screen-achievements" class="screen">
+            <div class="header-with-back">
+                <button id="btn-back-achievements" class="btn-icon">🔙</button>
+                <h2 class="page-title">Achievements</h2>
+            </div>
+            
+            <p class="settings-desc">Complete challenges to earn badges!</p>
+            
+            <div id="achievements-list" class="achievements-container">
+                <!-- Populated by JS -->
             </div>
         </div>
 
@@ -121,15 +135,8 @@
                 <button id="tab-shapes" class="shop-tab">Designs</button>
             </div>
 
-            <!-- Colors Container -->
-            <div id="shop-container-colors" class="shop-grid">
-                <!-- Populated by JS -->
-            </div>
-
-            <!-- Shapes Container -->
-            <div id="shop-container-shapes" class="shop-grid" style="display:none;">
-                <!-- Populated by JS -->
-            </div>
+            <div id="shop-container-colors" class="shop-grid"></div>
+            <div id="shop-container-shapes" class="shop-grid" style="display:none;"></div>
         </div>
 
         <!-- SETTINGS SCREEN -->
@@ -161,9 +168,7 @@
             
             <p class="level-desc">Higher levels unlock more time, but the target gets smaller!</p>
 
-            <div id="level-list" class="level-list">
-                <!-- Levels populated by JS -->
-            </div>
+            <div id="level-list" class="level-list"></div>
             
             <button id="btn-start-game" class="btn-primary btn-disabled" disabled style="margin-top:auto;">START GAME</button>
         </div>
@@ -203,6 +208,11 @@
             
             <div id="unlock-message" class="unlock-message" style="display: none;">
                 🎉 LEVEL 2 UNLOCKED!
+            </div>
+            
+            <!-- Toast notification for achievements -->
+            <div id="achievement-toast" class="achievement-toast" style="display: none;">
+                🏆 Achievement Unlocked: <br><strong id="achievement-toast-name">Name</strong>
             </div>
 
             <h3 id="feedback-message" class="feedback-msg">🎮 GREAT FIRST GAME!</h3>
