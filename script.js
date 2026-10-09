@@ -1,7 +1,8 @@
 // --- FIREBASE CONFIG & IMPORTS ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+// Ahiya signInWithRedirect proper import karelu chhe
+import { getAuth, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 // YOUR FIREBASE CONFIG
 const firebaseConfig = {
@@ -187,7 +188,7 @@ let currentLevelId = 1; let currentLevelConfig = null;
 let currentLevelScore = 0; let totalSessionScore = 0; 
 let timeLeft = 0; let gameInterval; let countdownInterval; let isPlaying = false;
 
-// --- INITIALIZATION (WITH SMART TIMEOUT FIX) ---
+// --- INITIALIZATION ---
 function init() {
     populateCountries(); 
     loadProfile();
@@ -197,7 +198,6 @@ function init() {
             playerProfile.id = user.uid;
             playerProfile.name = user.displayName ? user.displayName.split(' ')[0] : 'Player';
             
-            // SMART TIMEOUT: Jo database 3 sec ma respond na kare, to automatically game chalu kari do
             let isLoaded = false;
             const forceStartTimer = setTimeout(() => {
                 if (!isLoaded) {
@@ -207,7 +207,7 @@ function init() {
                     updateHomeUI();
                     showScreen(screenHome);
                 }
-            }, 3000); // 3 second ni limit
+            }, 3000);
 
             try {
                 const docRef = doc(db, "players", user.uid);
@@ -218,7 +218,6 @@ function init() {
                     if (docSnap.exists()) {
                         playerProfile = { ...playerProfile, ...docSnap.data() };
                         
-                        // Defaults
                         if(!playerProfile.unlockedColors) playerProfile.unlockedColors = ['Red', 'Blue', 'Green'];
                         if(!playerProfile.unlockedShapes) playerProfile.unlockedShapes = ['Circle', 'Square'];
                         if(!playerProfile.targetShape) playerProfile.targetShape = 'Circle';
@@ -254,18 +253,18 @@ function showScreen(screenElement) { screens.forEach(s => s.classList.remove('ac
 function formatNumber(num) { return Number(num).toLocaleString('en-IN'); }
 function populateCountries() { worldCountries.forEach(c => { let opt = document.createElement('option'); opt.value = c; opt.innerText = c; selectCountry.appendChild(opt); }); }
 
-// LOGIN ACTION
-btnLoginGoogle.addEventListener('click', async () => {
+// LOGIN ACTION (CHANGED TO REDIRECT)
+btnLoginGoogle.addEventListener('click', () => {
     loginLoading.style.display = 'block';
     btnLoginGoogle.style.display = 'none';
-    try {
-        await signInWithPopup(auth, provider);
-    } catch (error) {
+    
+    // Redirect bypasses all popup blockers
+    signInWithRedirect(auth, provider).catch((error) => {
         console.error("Auth Error", error);
-        alert("Google Login Failed. Try again.");
+        alert("Error: " + error.message);
         loginLoading.style.display = 'none';
         btnLoginGoogle.style.display = 'flex';
-    }
+    });
 });
 
 btnLogout.addEventListener('click', async () => {
