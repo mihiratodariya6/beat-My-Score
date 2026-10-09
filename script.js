@@ -243,19 +243,35 @@ function populateCountries() { worldCountries.forEach(c => { let opt = document.
 btnLoginGoogle.addEventListener('click', async () => {
     loginLoading.style.display = 'block';
     btnLoginGoogle.style.display = 'none';
+    
+    // Clear old errors before trying again
+    localStorage.removeItem('firebase:previous_websocket_failure');
+    
     try {
-        await signInWithPopup(auth, provider);
+        // Fix mate custom parameter pass karya jethi prompt aave
+        provider.setCustomParameters({
+            prompt: 'select_account'
+        });
+        
+        const result = await signInWithPopup(auth, provider);
+        console.log("Logged in successfully!", result.user.displayName);
+        // Page aagal automatically onAuthStateChanged thi chali jashe
+        
     } catch (error) {
-        console.error("Auth Error", error);
-        alert("Google Login Failed. Try again.");
+        console.error("Full Auth Error:", error);
+        
+        // Jo popup block thay to warning aapo
+        if (error.code === 'auth/popup-blocked') {
+            alert("POP-UP BLOCKED! Tamare browser ma pop-up allow karva padse (Address bar ma jamani baaju red icon par click karo).");
+        } else if (error.code === 'auth/popup-closed-by-user') {
+            // User e jate close karyu
+        } else {
+            alert("Error code: " + error.code + "\nMessage: " + error.message);
+        }
+        
         loginLoading.style.display = 'none';
         btnLoginGoogle.style.display = 'flex';
     }
-});
-
-btnLogout.addEventListener('click', async () => {
-    await signOut(auth);
-    location.reload();
 });
 
 // --- FIREBASE SYNC ---
