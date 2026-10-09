@@ -14,12 +14,12 @@ const screenHome = document.getElementById('screen-home');
 const screenSettings = document.getElementById('screen-settings');
 const screenShop = document.getElementById('screen-shop');
 const screenAchievements = document.getElementById('screen-achievements');
+const screenScoreboard = document.getElementById('screen-scoreboard');
 const screenReady = document.getElementById('screen-ready');
-const screenTransition = document.getElementById('screen-transition'); 
 const screenGame = document.getElementById('screen-game');
 const screenResult = document.getElementById('screen-result');
 
-const btnStartApp = document.getElementById('btn-start-app'); // PLAY NOW BUTTON
+const btnStartApp = document.getElementById('btn-start-app'); 
 const inputUsername = document.getElementById('input-username'); 
 const btnNextName = document.getElementById('btn-next-name'); 
 
@@ -43,9 +43,15 @@ const btnStartGame = document.getElementById('btn-start-game');
 const btnGoSettings = document.getElementById('btn-go-settings');
 const btnGoShop = document.getElementById('btn-go-shop');
 const btnGoAchievements = document.getElementById('btn-go-achievements');
+const btnGoScoreboard = document.getElementById('btn-go-scoreboard');
 
 const btnBackAchievements = document.getElementById('btn-back-achievements');
 const achievementsList = document.getElementById('achievements-list');
+
+const btnBackScoreboard = document.getElementById('btn-back-scoreboard');
+const tabWorld = document.getElementById('tab-world');
+const tabLocal = document.getElementById('tab-local');
+const scoreboardList = document.getElementById('scoreboard-list');
 
 const btnBackShop = document.getElementById('btn-back-shop');
 const shopCoins = document.getElementById('shop-coins');
@@ -56,7 +62,7 @@ const containerShapes = document.getElementById('shop-container-shapes');
 
 const btnBackSettings = document.getElementById('btn-back-settings');
 const toggleSound = document.getElementById('toggle-sound');
-const btnResetData = document.getElementById('btn-reset-data'); // RESET BUTTON
+const btnResetData = document.getElementById('btn-reset-data'); 
 
 const readyLevelText = document.getElementById('ready-level-text');
 const readyTargetText = document.getElementById('ready-target-text'); 
@@ -69,22 +75,27 @@ const uiProgress = document.getElementById('ui-progress');
 const playArea = document.getElementById('play-area');
 const target = document.getElementById('target');
 
+const resultTitle = document.getElementById('result-title');
 const resultLevel = document.getElementById('result-level');
 const resultScore = document.getElementById('result-score');
 const resultCoins = document.getElementById('result-coins');
-const resultBest = document.getElementById('result-best');
+const resultTotalScore = document.getElementById('result-total-score');
+const resultNextLevel = document.getElementById('result-next-level');
 const feedbackMessage = document.getElementById('feedback-message');
 const unlockMessage = document.getElementById('unlock-message');
 const achievementToast = document.getElementById('achievement-toast');
 const achievementToastName = document.getElementById('achievement-toast-name');
 const btnResultHome = document.getElementById('btn-result-home');
+const btnNextLevel = document.getElementById('btn-next-level');
+const btnResultShop = document.getElementById('btn-result-shop');
 const btnRestart = document.getElementById('btn-restart');
 
 // --- APP STATE ---
 let playerProfile = {
     name: '', gender: '', country: '', age: '',
     bestScore: 0, totalScore: 0, lastScore: 0, gamesPlayed: 0, coins: 0,
-    unlockedLevel: 1, targetColor: 'Red', targetShape: 'Circle',
+    unlockedLevel: 1, currentPlayingLevel: 1, // Track which level user is on
+    targetColor: 'Red', targetShape: 'Circle',
     unlockedColors: ['Red', 'Blue', 'Green'],
     unlockedShapes: ['Circle', 'Square'],
     unlockedAchievements: [],
@@ -157,19 +168,55 @@ for (let i = 1; i <= 100; i++) {
 
 const worldCountries = ["🇮🇳 India", "🇺🇸 USA", "🇬🇧 UK", "🇨🇦 Canada", "🇦🇺 Australia", "🇦🇪 UAE", "🇵🇰 Pakistan", "🇧🇩 Bangladesh", "🇳🇵 Nepal", "🇱🇰 Sri Lanka", "🇨🇳 China", "🇯🇵 Japan", "🇰🇷 South Korea", "🇸🇬 Singapore", "🇲🇾 Malaysia", "🇮🇩 Indonesia", "🇵🇭 Philippines", "🇹🇭 Thailand", "🇻🇳 Vietnam", "🇩🇪 Germany", "🇫🇷 France", "🇮🇹 Italy", "🇪🇸 Spain", "🇵🇹 Portugal", "🇳🇱 Netherlands", "🇨🇭 Switzerland", "🇸🇪 Sweden", "🇳🇴 Norway", "🇩🇰 Denmark", "🇫🇮 Finland", "🇷🇺 Russia", "🇺🇦 Ukraine", "🇧🇷 Brazil", "🇦🇷 Argentina", "🇨🇴 Colombia", "🇲🇽 Mexico", "🇿🇦 South Africa", "🇳🇬 Nigeria", "🇰🇪 Kenya", "🇪🇬 Egypt", "🇸🇦 Saudi Arabia", "🇮🇷 Iran", "🇹🇷 Turkey", "🇮🇱 Israel", "🇳🇿 New Zealand", "🌎 Other"];
 
-let currentLevelId = 1; let currentLevelConfig = null;
-let currentLevelScore = 0; let totalSessionScore = 0; 
+// FAKE LEADERBOARD DATA GENERATOR
+function generateFakeLeaderboard(isLocal) {
+    let data = [];
+    const names = ["Alex", "John", "Sarah", "Rahul", "Priya", "Mike", "Emma", "David", "Ayesha", "Chris", "Lisa", "Vikram", "Neha", "Sam", "Tom", "Jerry", "Ali", "Nina", "Oscar", "Zoe"];
+    const avatars = ["👨", "👩", "👤", "🧑", "👧", "👦"];
+    
+    // Player's actual score calculation logic to embed them naturally
+    let baseScore = playerProfile.totalScore > 0 ? playerProfile.totalScore : 100;
+    
+    for(let i=0; i<99; i++) {
+        let fakeCountry = isLocal ? playerProfile.country : worldCountries[Math.floor(Math.random() * worldCountries.length)];
+        let fakeScore = Math.floor(Math.random() * (baseScore * 2)) + 50; 
+        
+        data.push({
+            name: names[Math.floor(Math.random() * names.length)] + Math.floor(Math.random()*999),
+            country: fakeCountry,
+            bestScore: fakeScore,
+            avatar: avatars[Math.floor(Math.random() * avatars.length)],
+            isPlayer: false
+        });
+    }
+
+    // Insert Real Player
+    data.push({
+        name: playerProfile.name + ' (You)',
+        country: playerProfile.country,
+        bestScore: playerProfile.totalScore, // Rank based on TOTAL SCORE as requested
+        avatar: playerProfile.gender === 'Male' ? '👨' : (playerProfile.gender === 'Female' ? '👩' : '👤'),
+        isPlayer: true
+    });
+
+    data.sort((a,b) => b.bestScore - a.bestScore);
+    data.forEach((item, idx) => item.rank = idx + 1);
+    
+    return data;
+}
+
+
+let currentLevelConfig = null;
+let currentLevelScore = 0; 
 let timeLeft = 0; let gameInterval; let countdownInterval; let isPlaying = false;
 
 // --- INITIALIZATION (OFFLINE LOCAL STORAGE) ---
 function init() {
     populateCountries(); 
     
-    // Check if player data exists locally
     const savedData = localStorage.getItem('beatMyScoreProfile');
     
     if (savedData) {
-        // Returning User
         playerProfile = { ...playerProfile, ...JSON.parse(savedData) };
         
         if(!playerProfile.unlockedColors) playerProfile.unlockedColors = ['Red', 'Blue', 'Green'];
@@ -178,13 +225,13 @@ function init() {
         if(!playerProfile.unlockedAchievements) playerProfile.unlockedAchievements = [];
         if(playerProfile.soundEnabled === undefined) playerProfile.soundEnabled = true;
         if(!playerProfile.unlockedLevel) playerProfile.unlockedLevel = 1;
+        if(!playerProfile.currentPlayingLevel) playerProfile.currentPlayingLevel = playerProfile.unlockedLevel;
         
         toggleSound.checked = playerProfile.soundEnabled;
         applySettings(); 
         updateHomeUI(); 
-        showScreen(screenHome); // Direct to Dashboard
+        showScreen(screenHome); 
     } else {
-        // New User
         showScreen(screenStart);
     }
 }
@@ -194,9 +241,7 @@ function formatNumber(num) { return Number(num).toLocaleString('en-IN'); }
 function populateCountries() { worldCountries.forEach(c => { let opt = document.createElement('option'); opt.value = c; opt.innerText = c; selectCountry.appendChild(opt); }); }
 
 // START ACTION
-btnStartApp.addEventListener('click', () => {
-    showScreen(screenName);
-});
+btnStartApp.addEventListener('click', () => { showScreen(screenName); });
 
 btnResetData.addEventListener('click', () => {
     if(confirm("Are you sure you want to delete all your progress? This will reset the game completely!")) {
@@ -205,10 +250,7 @@ btnResetData.addEventListener('click', () => {
     }
 });
 
-// --- SAVE TO LOCAL STORAGE ---
-function saveProfile() {
-    localStorage.setItem('beatMyScoreProfile', JSON.stringify(playerProfile));
-}
+function saveProfile() { localStorage.setItem('beatMyScoreProfile', JSON.stringify(playerProfile)); }
 
 function applySettings() {
     const colorObj = SHOP_COLORS.find(c => c.name === playerProfile.targetColor) || SHOP_COLORS[0];
@@ -227,7 +269,6 @@ function applySettings() {
 }
 
 // --- ONBOARDING LOGIC ---
-
 inputUsername.addEventListener('input', () => { 
     btnNextName.disabled = inputUsername.value.trim().length < 3; 
     btnNextName.classList.toggle('btn-disabled', btnNextName.disabled); 
@@ -270,6 +311,7 @@ btnAges.forEach(btn => {
 
 btnFinishOnboarding.addEventListener('click', () => {
     playerProfile.unlockedLevel = 1; 
+    playerProfile.currentPlayingLevel = 1;
     playerProfile.targetColor = 'Red'; 
     playerProfile.targetShape = 'Circle'; 
     playerProfile.coins = 0; 
@@ -283,8 +325,7 @@ btnFinishOnboarding.addEventListener('click', () => {
     
     applySettings(); 
     updateHomeUI(); 
-    
-    saveProfile(); // SAVE DATA LOCALLY
+    saveProfile(); 
     
     showScreen(screenHome);
 });
@@ -294,7 +335,7 @@ function updateHomeUI() {
     displayName.innerText = playerProfile.name;
     displayAvatar.innerText = playerProfile.gender === 'Male' ? '👨' : (playerProfile.gender === 'Female' ? '👩' : '👤');
     displayCountry.innerText = playerProfile.country ? playerProfile.country.split(' ')[0] : '🌎';
-    displayLevelBadge.innerText = `LEVEL ${playerProfile.unlockedLevel}`;
+    displayLevelBadge.innerText = `LEVEL ${playerProfile.currentPlayingLevel}`; // Show current active level
     homeBestScore.innerText = formatNumber(playerProfile.bestScore);
     homeTotalScore.innerText = formatNumber(playerProfile.totalScore);
     homeGamesPlayed.innerText = formatNumber(playerProfile.gamesPlayed);
@@ -330,9 +371,43 @@ function checkAchievements() {
     return newAchievements;
 }
 
+// --- FAKE SCOREBOARD LOGIC ---
+btnGoScoreboard.addEventListener('click', () => { renderScoreboard('world'); showScreen(screenScoreboard); });
+btnBackScoreboard.addEventListener('click', () => { showScreen(screenHome); });
+
+tabWorld.addEventListener('click', () => { tabWorld.classList.add('active'); tabLocal.classList.remove('active'); renderScoreboard('world'); });
+tabLocal.addEventListener('click', () => { tabLocal.classList.add('active'); tabWorld.classList.remove('active'); renderScoreboard('local'); });
+
+function renderScoreboard(type) {
+    scoreboardList.innerHTML = '';
+    let data = generateFakeLeaderboard(type === 'local');
+    
+    data.forEach(p => {
+        const card = document.createElement('div');
+        card.className = `sb-card ${p.isPlayer ? 'highlight' : ''}`;
+        
+        let rankHtml = `<div class="sb-rank">${p.rank}</div>`;
+        if(p.rank === 1) rankHtml = `<div class="sb-rank gold">🥇</div>`;
+        if(p.rank === 2) rankHtml = `<div class="sb-rank silver">🥈</div>`;
+        if(p.rank === 3) rankHtml = `<div class="sb-rank bronze">🥉</div>`;
+
+        card.innerHTML = `
+            ${rankHtml}
+            <div class="sb-info">
+                <div class="sb-name" style="display:flex; align-items:center; gap:8px;"><span>${p.avatar}</span> ${p.name}</div>
+                <div class="sb-country">${p.country || '🌎'}</div>
+            </div>
+            <div class="sb-score">${formatNumber(p.bestScore)}</div>
+        `;
+        scoreboardList.appendChild(card);
+    });
+}
+
 // --- SHOP LOGIC ---
 btnGoShop.addEventListener('click', () => { shopCoins.innerText = formatNumber(playerProfile.coins); renderShop(); showScreen(screenShop); });
 btnBackShop.addEventListener('click', () => { updateHomeUI(); showScreen(screenHome); });
+btnResultShop.addEventListener('click', () => { shopCoins.innerText = formatNumber(playerProfile.coins); renderShop(); showScreen(screenShop); });
+
 tabColors.addEventListener('click', () => { tabColors.classList.add('active'); tabShapes.classList.remove('active'); containerColors.style.display = 'grid'; containerShapes.style.display = 'none'; });
 tabShapes.addEventListener('click', () => { tabShapes.classList.add('active'); tabColors.classList.remove('active'); containerShapes.style.display = 'grid'; containerColors.style.display = 'none'; });
 
@@ -364,14 +439,16 @@ window.equipItem = function(type, itemName) { if(type === 'Color') playerProfile
 
 // --- GAME LOOP ---
 btnStartGame.addEventListener('click', () => { 
-    currentLevelId = playerProfile.unlockedLevel; 
-    totalSessionScore = 0; 
+    startGetReadyPhase(); 
+});
+
+btnNextLevel.addEventListener('click', () => { 
     startGetReadyPhase(); 
 });
 
 function startGetReadyPhase() {
-    currentLevelConfig = LEVELS[currentLevelId - 1]; 
-    readyLevelText.innerText = `LEVEL ${currentLevelId}`; 
+    currentLevelConfig = LEVELS[playerProfile.currentPlayingLevel - 1]; 
+    readyLevelText.innerText = `LEVEL ${playerProfile.currentPlayingLevel}`; 
     readyTargetText.innerText = `Target Score: ${currentLevelConfig.targetScore}`; 
     readyCountdown.innerText = '3'; 
     showScreen(screenReady);
@@ -386,8 +463,6 @@ function startGetReadyPhase() {
 }
 
 btnRestart.addEventListener('click', () => {
-    currentLevelId = playerProfile.unlockedLevel;
-    totalSessionScore = 0;
     startGetReadyPhase();
 });
 
@@ -401,8 +476,8 @@ function startGame() {
     target.style.width = `${currentLevelConfig.size}px`; 
     target.style.height = `${currentLevelConfig.size}px`;
 
-    uiLevel.innerText = currentLevelId; 
-    uiScore.innerText = totalSessionScore; 
+    uiLevel.innerText = playerProfile.currentPlayingLevel; 
+    uiScore.innerText = currentLevelScore; // SCORE NOW SHOWS PER LEVEL
     uiTime.innerText = timeLeft; 
     uiProgress.style.width = '0%';
     
@@ -428,9 +503,8 @@ function handleTargetHit(e) {
     e.preventDefault(); 
     
     currentLevelScore++; 
-    totalSessionScore++;
     
-    uiScore.innerText = totalSessionScore; 
+    uiScore.innerText = currentLevelScore; 
     
     let progressPercent = (currentLevelScore / currentLevelConfig.targetScore) * 100;
     if (progressPercent > 100) progressPercent = 100;
@@ -460,53 +534,54 @@ function evaluateLevelResult() {
     clearInterval(gameInterval); 
     target.style.display = 'none';
 
-    if (currentLevelScore >= currentLevelConfig.targetScore) {
-        if (currentLevelId >= playerProfile.unlockedLevel) {
-            playerProfile.unlockedLevel = currentLevelId + 1; 
-            saveProfile();
-        }
-        
-        currentLevelId++;
-        
-        if (currentLevelId > 100) {
-            endGame(true); 
-        } else {
-            showScreen(screenTransition);
-            playSound('combo'); 
-            setTimeout(() => {
-                startGetReadyPhase();
-            }, 2000);
-        }
-    } else {
-        endGame(false);
-    }
+    let isSuccess = currentLevelScore >= currentLevelConfig.targetScore;
+    endGame(isSuccess);
 }
 
-function endGame(wonWholeGame) {
-    let oldBest = playerProfile.bestScore; 
-    let coinsEarned = totalSessionScore * 2; 
+function endGame(isSuccess) {
+    let coinsEarned = currentLevelScore * 2; 
     playerProfile.coins += coinsEarned;
-
-    if (totalSessionScore > oldBest && oldBest > 0) { feedbackMessage.innerText = '🏆 NEW PERSONAL BEST!'; feedbackMessage.style.color = '#10B981'; } 
-    else if (wonWholeGame) { feedbackMessage.innerText = '🔥 YOU BEAT THE GAME!'; feedbackMessage.style.color = '#F59E0B'; }
-    else { feedbackMessage.innerText = '💪 KEEP GOING! TRY AGAIN'; feedbackMessage.style.color = '#EF4444'; } 
-
     playerProfile.gamesPlayed++; 
-    playerProfile.totalScore += totalSessionScore; 
+    playerProfile.totalScore += currentLevelScore; 
     
-    if (totalSessionScore > playerProfile.bestScore) {
-        playerProfile.bestScore = totalSessionScore;
+    if (currentLevelScore > playerProfile.bestScore) {
+        playerProfile.bestScore = currentLevelScore;
     }
+
+    if (isSuccess) { 
+        resultTitle.innerText = `🎯 LEVEL ${playerProfile.currentPlayingLevel} CLEARED!`; 
+        resultTitle.style.color = '#10B981';
+        feedbackMessage.innerText = 'AWESOME WORK!';
+        btnNextLevel.style.display = 'block';
+        
+        // Progress to next level
+        if(playerProfile.currentPlayingLevel >= playerProfile.unlockedLevel) {
+             playerProfile.unlockedLevel = playerProfile.currentPlayingLevel + 1;
+             unlockMessage.style.display = 'block';
+             unlockMessage.innerText = `🎉 LEVEL ${playerProfile.unlockedLevel} UNLOCKED!`;
+        } else {
+             unlockMessage.style.display = 'none';
+        }
+        playerProfile.currentPlayingLevel++; // Move active level pointer up
+        
+    } else { 
+        resultTitle.innerText = `💀 GAME OVER`; 
+        resultTitle.style.color = '#EF4444';
+        feedbackMessage.innerText = 'TARGET NOT REACHED. TRY AGAIN!';
+        btnNextLevel.style.display = 'none';
+        unlockMessage.style.display = 'none';
+    } 
 
     const newAchievements = checkAchievements();
     
-    saveProfile(); // SAVE LOCALLY
+    saveProfile(); // AUTO SAVE PROGRESS IMMEDIATELY
     playSound('over');
 
-    resultLevel.innerText = currentLevelId;
-    resultScore.innerText = totalSessionScore;
+    resultLevel.innerText = playerProfile.currentPlayingLevel;
+    resultScore.innerText = currentLevelScore;
+    resultTotalScore.innerText = playerProfile.totalScore;
     resultCoins.innerText = formatNumber(coinsEarned);
-    resultBest.innerText = formatNumber(playerProfile.bestScore);
+    resultNextLevel.innerText = isSuccess ? playerProfile.currentPlayingLevel : playerProfile.currentPlayingLevel;
 
     if(newAchievements.length > 0) {
         achievementToastName.innerText = newAchievements[0].title;

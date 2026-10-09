@@ -207,21 +207,21 @@
 
         <!-- RESULT SCREEN -->
         <div id="screen-result" class="screen">
-            <h2>🎯 GAME OVER</h2>
+            <h2 id="result-title">🎯 LEVEL CLEARED!</h2>
             
             <div id="unlock-message" class="unlock-message" style="display: none;">
-                🎉 LEVEL 2 UNLOCKED!
+                🎉 NEXT LEVEL UNLOCKED!
             </div>
             
             <div id="achievement-toast" class="achievement-toast" style="display: none;">
                 🏆 Achievement Unlocked: <br><strong id="achievement-toast-name">Name</strong>
             </div>
 
-            <h3 id="feedback-message" class="feedback-msg">🎮 GREAT FIRST GAME!</h3>
+            <h3 id="feedback-message" class="feedback-msg">🎮 AWESOME!</h3>
 
             <div class="result-stats">
                 <div class="result-row highlight-row" style="margin-top:0; border-top:none;">
-                    <span>TOTAL SCORE:</span>
+                    <span>SCORE:</span>
                     <span id="result-score">0</span>
                 </div>
                 <div class="result-row" style="color: #F59E0B; font-weight:800; justify-content:center; gap:8px;">
@@ -229,19 +229,24 @@
                     <span>+<span id="result-coins">0</span> 🪙</span>
                 </div>
                 <div class="result-row" style="opacity: 0.7; font-size: 14px; margin-top: 16px;">
-                    <span>Level Reached:</span>
-                    <span id="result-level">1</span>
+                    <span>Total Score:</span>
+                    <span id="result-total-score">0</span>
                 </div>
                 <div class="result-row" style="color: #4F46E5; font-size: 14px;">
-                    <span>All-Time Best:</span>
-                    <span id="result-best">0</span>
+                    <span>Next Level:</span>
+                    <span id="result-next-level">2</span>
                 </div>
             </div>
 
-            <button id="btn-result-home" class="btn-secondary sound-btn" style="margin-bottom: 12px;">🏠 HOME</button>
-            <button id="btn-restart" class="btn-primary sound-btn">🔄 PLAY AGAIN</button>
+            <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px;">
+                <button id="btn-next-level" class="btn-primary sound-btn">⏭️ NEXT LEVEL</button>
+                <div style="display: flex; gap: 12px;">
+                    <button id="btn-result-home" class="btn-secondary sound-btn" style="flex: 1; margin: 0;">🏠 HOME</button>
+                    <button id="btn-result-shop" class="btn-secondary sound-btn" style="flex: 1; margin: 0; background: #F59E0B; color: white;">🛒 SHOP</button>
+                </div>
+                <button id="btn-restart" class="btn-secondary sound-btn" style="margin: 0;">🔄 RETRY LEVEL</button>
+            </div>
         </div>
-    </div>
 
     <!-- Firebase SDK kadhi nakhyu -->
     <script src="script.js"></script>
