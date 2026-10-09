@@ -94,7 +94,7 @@ const btnRestart = document.getElementById('btn-restart');
 let playerProfile = {
     name: '', gender: '', country: '', age: '',
     bestScore: 0, totalScore: 0, lastScore: 0, gamesPlayed: 0, coins: 0,
-    unlockedLevel: 1, currentPlayingLevel: 1, // Track which level user is on
+    unlockedLevel: 1, currentPlayingLevel: 1, 
     targetColor: 'Red', targetShape: 'Circle',
     unlockedColors: ['Red', 'Blue', 'Green'],
     unlockedShapes: ['Circle', 'Square'],
@@ -174,12 +174,11 @@ function generateFakeLeaderboard(isLocal) {
     const names = ["Alex", "John", "Sarah", "Rahul", "Priya", "Mike", "Emma", "David", "Ayesha", "Chris", "Lisa", "Vikram", "Neha", "Sam", "Tom", "Jerry", "Ali", "Nina", "Oscar", "Zoe"];
     const avatars = ["👨", "👩", "👤", "🧑", "👧", "👦"];
     
-    // Player's actual score calculation logic to embed them naturally
     let baseScore = playerProfile.totalScore > 0 ? playerProfile.totalScore : 100;
     
     for(let i=0; i<99; i++) {
         let fakeCountry = isLocal ? playerProfile.country : worldCountries[Math.floor(Math.random() * worldCountries.length)];
-        let fakeScore = Math.floor(Math.random() * (baseScore * 2)) + 50; 
+        let fakeScore = Math.floor(Math.random() * (baseScore * 1.5)) + 10; 
         
         data.push({
             name: names[Math.floor(Math.random() * names.length)] + Math.floor(Math.random()*999),
@@ -190,11 +189,10 @@ function generateFakeLeaderboard(isLocal) {
         });
     }
 
-    // Insert Real Player
     data.push({
         name: playerProfile.name + ' (You)',
         country: playerProfile.country,
-        bestScore: playerProfile.totalScore, // Rank based on TOTAL SCORE as requested
+        bestScore: playerProfile.totalScore, 
         avatar: playerProfile.gender === 'Male' ? '👨' : (playerProfile.gender === 'Female' ? '👩' : '👤'),
         isPlayer: true
     });
@@ -204,7 +202,6 @@ function generateFakeLeaderboard(isLocal) {
     
     return data;
 }
-
 
 let currentLevelConfig = null;
 let currentLevelScore = 0; 
@@ -238,7 +235,17 @@ function init() {
 
 function showScreen(screenElement) { screens.forEach(s => s.classList.remove('active')); screenElement.classList.add('active'); }
 function formatNumber(num) { return Number(num).toLocaleString('en-IN'); }
-function populateCountries() { worldCountries.forEach(c => { let opt = document.createElement('option'); opt.value = c; opt.innerText = c; selectCountry.appendChild(opt); }); }
+
+// PROPER COUNTRY POPULATE
+function populateCountries() { 
+    selectCountry.innerHTML = '<option value="" disabled selected>Select your country</option>';
+    worldCountries.forEach(c => { 
+        let opt = document.createElement('option'); 
+        opt.value = c; 
+        opt.innerText = c; 
+        selectCountry.appendChild(opt); 
+    }); 
+}
 
 // START ACTION
 btnStartApp.addEventListener('click', () => { showScreen(screenName); });
@@ -335,7 +342,7 @@ function updateHomeUI() {
     displayName.innerText = playerProfile.name;
     displayAvatar.innerText = playerProfile.gender === 'Male' ? '👨' : (playerProfile.gender === 'Female' ? '👩' : '👤');
     displayCountry.innerText = playerProfile.country ? playerProfile.country.split(' ')[0] : '🌎';
-    displayLevelBadge.innerText = `LEVEL ${playerProfile.currentPlayingLevel}`; // Show current active level
+    displayLevelBadge.innerText = `LEVEL ${playerProfile.currentPlayingLevel}`; 
     homeBestScore.innerText = formatNumber(playerProfile.bestScore);
     homeTotalScore.innerText = formatNumber(playerProfile.totalScore);
     homeGamesPlayed.innerText = formatNumber(playerProfile.gamesPlayed);
@@ -345,7 +352,6 @@ function updateHomeUI() {
 btnGoSettings.addEventListener('click', () => { showScreen(screenSettings); });
 btnBackSettings.addEventListener('click', () => { showScreen(screenHome); });
 toggleSound.addEventListener('change', () => { playerProfile.soundEnabled = toggleSound.checked; saveProfile(); });
-
 
 // --- ACHIEVEMENTS LOGIC ---
 btnGoAchievements.addEventListener('click', () => { renderAchievements(); showScreen(screenAchievements); });
@@ -477,7 +483,7 @@ function startGame() {
     target.style.height = `${currentLevelConfig.size}px`;
 
     uiLevel.innerText = playerProfile.currentPlayingLevel; 
-    uiScore.innerText = currentLevelScore; // SCORE NOW SHOWS PER LEVEL
+    uiScore.innerText = currentLevelScore; 
     uiTime.innerText = timeLeft; 
     uiProgress.style.width = '0%';
     
@@ -554,7 +560,6 @@ function endGame(isSuccess) {
         feedbackMessage.innerText = 'AWESOME WORK!';
         btnNextLevel.style.display = 'block';
         
-        // Progress to next level
         if(playerProfile.currentPlayingLevel >= playerProfile.unlockedLevel) {
              playerProfile.unlockedLevel = playerProfile.currentPlayingLevel + 1;
              unlockMessage.style.display = 'block';
@@ -562,7 +567,7 @@ function endGame(isSuccess) {
         } else {
              unlockMessage.style.display = 'none';
         }
-        playerProfile.currentPlayingLevel++; // Move active level pointer up
+        playerProfile.currentPlayingLevel++; 
         
     } else { 
         resultTitle.innerText = `💀 GAME OVER`; 
@@ -574,14 +579,14 @@ function endGame(isSuccess) {
 
     const newAchievements = checkAchievements();
     
-    saveProfile(); // AUTO SAVE PROGRESS IMMEDIATELY
+    saveProfile(); 
     playSound('over');
 
     resultLevel.innerText = playerProfile.currentPlayingLevel;
     resultScore.innerText = currentLevelScore;
     resultTotalScore.innerText = playerProfile.totalScore;
     resultCoins.innerText = formatNumber(coinsEarned);
-    resultNextLevel.innerText = isSuccess ? playerProfile.currentPlayingLevel : playerProfile.currentPlayingLevel;
+    resultNextLevel.innerText = playerProfile.currentPlayingLevel;
 
     if(newAchievements.length > 0) {
         achievementToastName.innerText = newAchievements[0].title;
@@ -595,5 +600,4 @@ function endGame(isSuccess) {
 
 btnResultHome.addEventListener('click', () => { updateHomeUI(); showScreen(screenHome); });
 
-// Initialize app
 init();
