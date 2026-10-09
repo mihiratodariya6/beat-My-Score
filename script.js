@@ -193,7 +193,6 @@ function init() {
     populateCountries(); 
     loadProfile();
     
-    // Auth Listener with Fallback
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             playerProfile.id = user.uid;
@@ -203,13 +202,15 @@ function init() {
             btnLoginGoogle.style.display = 'none';
 
             try {
+                // Try to read from Firestore
                 const docRef = doc(db, "players", user.uid);
                 const docSnap = await getDoc(docRef);
                 
                 if (docSnap.exists()) {
+                    // Profile exists in cloud
                     playerProfile = { ...playerProfile, ...docSnap.data() };
                     
-                    // Defaults for safety
+                    // Safety defaults
                     if(!playerProfile.unlockedColors) playerProfile.unlockedColors = ['Red', 'Blue', 'Green'];
                     if(!playerProfile.unlockedShapes) playerProfile.unlockedShapes = ['Circle', 'Square'];
                     if(!playerProfile.targetShape) playerProfile.targetShape = 'Circle';
@@ -218,15 +219,24 @@ function init() {
                     if(!playerProfile.unlockedLevel) playerProfile.unlockedLevel = 1;
                     
                     toggleSound.checked = playerProfile.soundEnabled;
-                    applySettings(); updateHomeUI(); showScreen(screenHome);
+                    applySettings(); 
+                    updateHomeUI(); 
+                    showScreen(screenHome);
                 } else {
-                    // Start Onboarding for new user
-                    showScreen(screenGender); 
+                    // Brand new user
+                    showScreen(screenGender);
                 }
             } catch(e) {
-                console.error("Firestore read error. Showing onboarding just in case.", e);
-                // If it fails to read, we show onboarding rather than getting stuck on loading screen
-                showScreen(screenGender);
+                // FIREBASE DATABASE ERROR FALLBACK
+                console.error("Database connection failed. Falling back to local profile.", e);
+                // Database fail thay to pan game atke nai
+                if(playerProfile.country) {
+                   applySettings(); 
+                   updateHomeUI(); 
+                   showScreen(screenHome); 
+                } else {
+                   showScreen(screenGender); 
+                }
             }
         } else {
             loginLoading.style.display = 'none';
