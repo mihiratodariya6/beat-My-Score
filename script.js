@@ -566,3 +566,4 @@ function endGame() {
 btnResultHome.addEventListener('click', () => { updateHomeUI(); showScreen(screenHome); });
 
 init();
+
