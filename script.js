@@ -190,8 +190,9 @@ let timeLeft = 0; let gameInterval; let countdownInterval; let isPlaying = false
 // --- INITIALIZATION ---
 function init() {
     populateCountries(); 
+    loadProfile();
     
-    // Auth Listener
+    // Auth Listener with Fallback
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             playerProfile.id = user.uid;
@@ -207,6 +208,7 @@ function init() {
                 if (docSnap.exists()) {
                     playerProfile = { ...playerProfile, ...docSnap.data() };
                     
+                    // Defaults for safety
                     if(!playerProfile.unlockedColors) playerProfile.unlockedColors = ['Red', 'Blue', 'Green'];
                     if(!playerProfile.unlockedShapes) playerProfile.unlockedShapes = ['Circle', 'Square'];
                     if(!playerProfile.targetShape) playerProfile.targetShape = 'Circle';
@@ -217,11 +219,13 @@ function init() {
                     toggleSound.checked = playerProfile.soundEnabled;
                     applySettings(); updateHomeUI(); showScreen(screenHome);
                 } else {
-                    showScreen(screenGender); // Needs onboarding
+                    // Start Onboarding for new user
+                    showScreen(screenGender); 
                 }
             } catch(e) {
-                console.error("Error fetching profile", e);
-                alert("Could not load profile. Check console.");
+                console.error("Firestore read error. Showing onboarding just in case.", e);
+                // If it fails to read, we show onboarding rather than getting stuck on loading screen
+                showScreen(screenGender);
             }
         } else {
             loginLoading.style.display = 'none';
@@ -243,7 +247,7 @@ btnLoginGoogle.addEventListener('click', async () => {
         await signInWithPopup(auth, provider);
     } catch (error) {
         console.error("Auth Error", error);
-        alert("Google Login Failed. Make sure you are using your GitHub Pages live link, not the Codespace link.");
+        alert("Google Login Failed. Try again.");
         loginLoading.style.display = 'none';
         btnLoginGoogle.style.display = 'flex';
     }
@@ -251,6 +255,7 @@ btnLoginGoogle.addEventListener('click', async () => {
 
 btnLogout.addEventListener('click', async () => {
     await signOut(auth);
+    location.reload();
 });
 
 // --- FIREBASE SYNC ---
@@ -310,11 +315,14 @@ btnFinishOnboarding.addEventListener('click', async () => {
     await syncToFirebase(); 
 });
 
+function loadProfile() { const saved = localStorage.getItem('beatMyScoreProfile'); if (saved) playerProfile = { ...playerProfile, ...JSON.parse(saved) }; }
+function saveProfile() { localStorage.setItem('beatMyScoreProfile', JSON.stringify(playerProfile)); }
+
 // --- HOME LOGIC ---
 function updateHomeUI() {
     displayName.innerText = playerProfile.name;
     displayAvatar.innerText = playerProfile.gender === 'Male' ? '👨' : (playerProfile.gender === 'Female' ? '👩' : '👤');
-    displayCountry.innerText = playerProfile.country.split(' ')[0];
+    displayCountry.innerText = playerProfile.country ? playerProfile.country.split(' ')[0] : '🌎';
     displayLevelBadge.innerText = `LEVEL ${playerProfile.unlockedLevel}`;
     homeBestScore.innerText = formatNumber(playerProfile.bestScore);
     homeTotalScore.innerText = formatNumber(playerProfile.totalScore);
@@ -380,7 +388,7 @@ async function renderScoreboard(type) {
                 ${rankHtml}
                 <div class="sb-info">
                     <div class="sb-name">${p.name}</div>
-                    <div class="sb-country">${p.country}</div>
+                    <div class="sb-country">${p.country || '🌎'}</div>
                 </div>
                 <div class="sb-score">${p.bestScore}</div>
             `;
