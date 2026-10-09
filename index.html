@@ -22,7 +22,7 @@
             <div id="login-loading" style="display: none; text-align: center; margin-top: 20px; color: var(--text-muted); font-weight: bold;">Loading Profile... ⏳</div>
         </div>
 
-        <!-- ONBOARDING: GENDER (Name is fetched from Google automatically) -->
+        <!-- ONBOARDING: GENDER -->
         <div id="screen-gender" class="screen">
             <h2 class="step-title">Select your gender</h2>
             <div class="grid-options">
@@ -96,7 +96,7 @@
             </div>
 
             <div class="home-actions">
-                <button id="btn-go-level-select" class="btn-huge sound-btn">▶ TAP TO PLAY</button>
+                <button id="btn-start-game" class="btn-huge sound-btn">▶ TAP TO PLAY</button>
                 <button id="btn-go-scoreboard" class="btn-secondary sound-btn">🏆 SCOREBOARD</button>
                 <button id="btn-go-achievements" class="btn-secondary sound-btn">⭐ ACHIEVEMENTS</button>
                 <button id="btn-go-shop" class="btn-secondary sound-btn" style="background:#F59E0B; color:white;">🛒 ITEM SHOP</button>
@@ -184,27 +184,17 @@
             <button id="btn-logout" class="btn-secondary sound-btn" style="color: #EF4444; border: 2px solid #EF4444; background: transparent;">🚪 LOGOUT</button>
         </div>
 
-        <!-- LEVEL SELECTION SCREEN -->
-        <div id="screen-level-select" class="screen">
-            <div class="header-with-back">
-                <button id="btn-back-home" class="btn-icon sound-btn">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-                </button>
-                <h2 class="page-title">Select Level</h2>
-            </div>
-            
-            <p class="level-desc">Unlock 100 unique levels! The target gets smaller every level.</p>
-
-            <div id="level-list" class="level-list"></div>
-            
-            <button id="btn-start-game" class="btn-primary btn-disabled sound-btn" disabled style="margin-top:auto;">START GAME</button>
-        </div>
-
         <!-- GET READY SCREEN -->
         <div id="screen-ready" class="screen">
             <h2 id="ready-level-text" class="ready-title">LEVEL 1</h2>
-            <p id="ready-time-text" class="ready-subtitle">30 SECONDS</p>
+            <p id="ready-target-text" class="ready-subtitle">Target: 30</p>
             <div id="ready-countdown" class="countdown-text">3</div>
+        </div>
+        
+        <!-- LEVEL TRANSITION SCREEN -->
+        <div id="screen-transition" class="screen" style="justify-content: center; align-items: center; background-color: var(--primary); color: white;">
+            <h2 class="ready-title" style="font-size: 40px; color: #10B981;">LEVEL CLEARED!</h2>
+            <p class="ready-subtitle" style="margin-top: 20px;">Get ready for the next level...</p>
         </div>
 
         <!-- GAME SCREEN -->
@@ -215,13 +205,17 @@
                     <span id="ui-time" class="stat-value">30</span>
                 </div>
                 <div class="stat-box center">
-                    <span class="stat-label">COMBO</span>
-                    <span id="ui-combo" class="stat-value highlight">0🔥</span>
+                    <span class="stat-label">LEVEL</span>
+                    <span id="ui-level" class="stat-value highlight">1</span>
                 </div>
                 <div class="stat-box">
                     <span class="stat-label">SCORE</span>
                     <span id="ui-score" class="stat-value">0</span>
                 </div>
+            </div>
+            <!-- Added Progress bar for current level target -->
+            <div style="width: 100%; height: 8px; background: var(--secondary); border-radius: 4px; margin-bottom: 16px; overflow: hidden;">
+                <div id="ui-progress" style="height: 100%; width: 0%; background: #10B981; transition: width 0.2s;"></div>
             </div>
             
             <div id="play-area">
@@ -233,10 +227,6 @@
         <div id="screen-result" class="screen">
             <h2>🎯 GAME OVER</h2>
             
-            <div id="unlock-message" class="unlock-message" style="display: none;">
-                🎉 LEVEL 2 UNLOCKED!
-            </div>
-            
             <div id="achievement-toast" class="achievement-toast" style="display: none;">
                 🏆 Achievement Unlocked: <br><strong id="achievement-toast-name">Name</strong>
             </div>
@@ -245,7 +235,7 @@
 
             <div class="result-stats">
                 <div class="result-row highlight-row" style="margin-top:0; border-top:none;">
-                    <span>LATEST SCORE:</span>
+                    <span>TOTAL SCORE:</span>
                     <span id="result-score">0</span>
                 </div>
                 <div class="result-row" style="color: #F59E0B; font-weight:800; justify-content:center; gap:8px;">
@@ -253,8 +243,8 @@
                     <span>+<span id="result-coins">0</span> 🪙</span>
                 </div>
                 <div class="result-row" style="opacity: 0.7; font-size: 14px; margin-top: 16px;">
-                    <span>Level Played:</span>
-                    <span id="result-level">1 (30s)</span>
+                    <span>Level Reached:</span>
+                    <span id="result-level">1</span>
                 </div>
                 <div class="result-row" style="color: #4F46E5; font-size: 14px;">
                     <span>All-Time Best:</span>

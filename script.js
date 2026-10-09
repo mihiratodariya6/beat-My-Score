@@ -35,8 +35,8 @@ const screenSettings = document.getElementById('screen-settings');
 const screenShop = document.getElementById('screen-shop');
 const screenAchievements = document.getElementById('screen-achievements');
 const screenScoreboard = document.getElementById('screen-scoreboard');
-const screenLevelSelect = document.getElementById('screen-level-select');
 const screenReady = document.getElementById('screen-ready');
+const screenTransition = document.getElementById('screen-transition'); // NEW
 const screenGame = document.getElementById('screen-game');
 const screenResult = document.getElementById('screen-result');
 
@@ -59,7 +59,7 @@ const homeTotalScore = document.getElementById('home-total-score');
 const homeGamesPlayed = document.getElementById('home-games-played');
 const homeCoins = document.getElementById('home-coins');
 
-const btnGoLevelSelect = document.getElementById('btn-go-level-select');
+const btnStartGame = document.getElementById('btn-start-game'); // Changed to direct play
 const btnGoSettings = document.getElementById('btn-go-settings');
 const btnGoShop = document.getElementById('btn-go-shop');
 const btnGoAchievements = document.getElementById('btn-go-achievements');
@@ -84,17 +84,14 @@ const btnBackSettings = document.getElementById('btn-back-settings');
 const toggleSound = document.getElementById('toggle-sound');
 const btnLogout = document.getElementById('btn-logout');
 
-const btnBackHome = document.getElementById('btn-back-home');
-const levelListContainer = document.getElementById('level-list');
-const btnStartGame = document.getElementById('btn-start-game');
-
 const readyLevelText = document.getElementById('ready-level-text');
-const readyTimeText = document.getElementById('ready-time-text');
+const readyTargetText = document.getElementById('ready-target-text'); // NEW
 const readyCountdown = document.getElementById('ready-countdown');
 
 const uiTime = document.getElementById('ui-time');
+const uiLevel = document.getElementById('ui-level'); // Changed from combo
 const uiScore = document.getElementById('ui-score');
-const uiCombo = document.getElementById('ui-combo');
+const uiProgress = document.getElementById('ui-progress'); // NEW
 const playArea = document.getElementById('play-area');
 const target = document.getElementById('target');
 
@@ -141,8 +138,9 @@ const ACHIEVEMENTS = [
     { id: 'score_100', icon: '🔥', title: 'Century Maker', desc: 'Score 100 points in a single game.', condition: (p) => p.bestScore >= 100 },
     { id: 'total_500', icon: '📈', title: 'Grinder', desc: 'Reach a total score of 500.', condition: (p) => p.totalScore >= 500 },
     { id: 'rich_kid', icon: '💰', title: 'Rich Kid', desc: 'Accumulate 1,000 coins.', condition: (p) => p.coins >= 1000 },
-    { id: 'level_3', icon: '⭐', title: 'Rising Star', desc: 'Unlock Level 3.', condition: (p) => p.unlockedLevel >= 3 },
-    { id: 'level_5', icon: '👑', title: 'Game Master', desc: 'Unlock Level 5.', condition: (p) => p.unlockedLevel >= 5 },
+    { id: 'level_3', icon: '⭐', title: 'Rising Star', desc: 'Reach Level 3.', condition: (p) => p.unlockedLevel >= 3 },
+    { id: 'level_5', icon: '👑', title: 'Game Master', desc: 'Reach Level 5.', condition: (p) => p.unlockedLevel >= 5 },
+    { id: 'level_10', icon: '🚀', title: 'Unstoppable', desc: 'Reach Level 10.', condition: (p) => p.unlockedLevel >= 10 },
     { id: 'shopper', icon: '🛍️', title: 'Big Spender', desc: 'Unlock 5 different colors.', condition: (p) => p.unlockedColors.length >= 5 }
 ];
 
@@ -174,28 +172,34 @@ const SHOP_SHAPES = [
     { name: 'Ninja', css: '0', clipPath: 'polygon(50% 0%, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0% 50%, 40% 40%)', cost: 100000 }
 ];
 
+// --- 100 INFINITE LEVELS GENERATION ---
 const LEVELS = [];
 for (let i = 1; i <= 100; i++) {
     LEVELS.push({
         id: i,
-        time: Math.min(60, 25 + (i * 5)), 
-        size: Math.max(20, 85 - (i * 5)), 
-        unlockReq: (i - 1) * 30 
+        time: 15 + Math.floor(i / 2), // Gives a bit more time slowly
+        size: Math.max(20, 80 - (i * 2)), // Shrinks to 20px
+        targetScore: 20 + (i * 5) // Score needed in THIS level to proceed
     });
 }
 
 const worldCountries = ["🇮🇳 India", "🇺🇸 USA", "🇬🇧 UK", "🇨🇦 Canada", "🇦🇺 Australia", "🇦🇪 UAE", "🇵🇰 Pakistan", "🇧🇩 Bangladesh", "🇳🇵 Nepal", "🇱🇰 Sri Lanka", "🇨🇳 China", "🇯🇵 Japan", "🇰🇷 South Korea", "🇸🇬 Singapore", "🇲🇾 Malaysia", "🇮🇩 Indonesia", "🇵🇭 Philippines", "🇹🇭 Thailand", "🇻🇳 Vietnam", "🇩🇪 Germany", "🇫🇷 France", "🇮🇹 Italy", "🇪🇸 Spain", "🇵🇹 Portugal", "🇳🇱 Netherlands", "🇨🇭 Switzerland", "🇸🇪 Sweden", "🇳🇴 Norway", "🇩🇰 Denmark", "🇫🇮 Finland", "🇷🇺 Russia", "🇺🇦 Ukraine", "🇧🇷 Brazil", "🇦🇷 Argentina", "🇨🇴 Colombia", "🇲🇽 Mexico", "🇿🇦 South Africa", "🇳🇬 Nigeria", "🇰🇪 Kenya", "🇪🇬 Egypt", "🇸🇦 Saudi Arabia", "🇮🇷 Iran", "🇹🇷 Turkey", "🇮🇱 Israel", "🇳🇿 New Zealand", "🌎 Other"];
 
-let selectedLevelId = 1; let currentLevelConfig = null;
-let score = 0; let combo = 0; let maxCombo = 0; let timeLeft = 0;
-let gameInterval; let countdownInterval; let isPlaying = false;
+// GAME VARIABLES
+let currentLevelId = 1;
+let currentLevelConfig = null;
+let currentLevelScore = 0; 
+let totalSessionScore = 0; // Total score accumulated in the current run
+let timeLeft = 0;
+let gameInterval; 
+let countdownInterval; 
+let isPlaying = false;
 
 // --- INITIALIZATION ---
 function init() {
     populateCountries(); 
     loadProfile();
     
-    // Check Auth State
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             playerProfile.id = user.uid;
@@ -216,6 +220,7 @@ function init() {
                     if(!playerProfile.targetShape) playerProfile.targetShape = 'Circle';
                     if(!playerProfile.unlockedAchievements) playerProfile.unlockedAchievements = [];
                     if(playerProfile.soundEnabled === undefined) playerProfile.soundEnabled = true;
+                    if(!playerProfile.unlockedLevel) playerProfile.unlockedLevel = 1;
                     
                     toggleSound.checked = playerProfile.soundEnabled;
                     applySettings(); updateHomeUI(); showScreen(screenHome);
@@ -238,11 +243,9 @@ function showScreen(screenElement) { screens.forEach(s => s.classList.remove('ac
 function formatNumber(num) { return Number(num).toLocaleString('en-IN'); }
 function populateCountries() { worldCountries.forEach(c => { let opt = document.createElement('option'); opt.value = c; opt.innerText = c; selectCountry.appendChild(opt); }); }
 
-// CHANGED TO POPUP LOGIN FOR CODESPACES COMPATIBILITY
 btnLoginGoogle.addEventListener('click', async () => {
     loginLoading.style.display = 'block';
     btnLoginGoogle.style.display = 'none';
-    
     try {
         await signInWithPopup(auth, provider);
     } catch (error) {
@@ -329,12 +332,11 @@ function updateHomeUI() {
     homeCoins.innerText = formatNumber(playerProfile.coins);
 }
 
-btnGoLevelSelect.addEventListener('click', () => { buildLevelList(); showScreen(screenLevelSelect); });
 btnGoSettings.addEventListener('click', () => { showScreen(screenSettings); });
 btnBackSettings.addEventListener('click', () => { showScreen(screenHome); });
 toggleSound.addEventListener('change', () => { playerProfile.soundEnabled = toggleSound.checked; syncToFirebase(); });
 
-// --- SCOREBOARD LOGIC (REAL FIREBASE) ---
+// --- SCOREBOARD LOGIC ---
 btnGoScoreboard.addEventListener('click', () => { renderScoreboard('world'); showScreen(screenScoreboard); });
 btnBackScoreboard.addEventListener('click', () => { showScreen(screenHome); });
 
@@ -343,32 +345,20 @@ tabLocal.addEventListener('click', () => { tabLocal.classList.add('active'); tab
 
 async function renderScoreboard(type) {
     scoreboardList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Loading global data... 🌍</div>';
-    
     try {
         const playersRef = collection(db, "players");
         const q = query(playersRef, orderBy("bestScore", "desc"), limit(100));
         const querySnapshot = await getDocs(q);
-        
         let allData = [];
-        querySnapshot.forEach((doc) => {
-            allData.push(doc.data());
-        });
+        querySnapshot.forEach((doc) => { allData.push(doc.data()); });
 
-        if(type === 'local') {
-            allData = allData.filter(p => p.country === playerProfile.country);
-        }
+        if(type === 'local') { allData = allData.filter(p => p.country === playerProfile.country); }
 
         let playerInList = allData.find(p => p.name === playerProfile.name && p.bestScore === playerProfile.bestScore);
         if (!playerInList && playerProfile.bestScore > 0) {
-            allData.push({
-                name: playerProfile.name + ' (You)',
-                country: playerProfile.country,
-                bestScore: playerProfile.bestScore,
-                isPlayer: true
-            });
+            allData.push({ name: playerProfile.name + ' (You)', country: playerProfile.country, bestScore: playerProfile.bestScore, isPlayer: true });
         } else if (playerInList) {
-            playerInList.isPlayer = true;
-            playerInList.name += ' (You)';
+            playerInList.isPlayer = true; playerInList.name += ' (You)';
         }
 
         allData.sort((a,b) => b.bestScore - a.bestScore);
@@ -376,31 +366,18 @@ async function renderScoreboard(type) {
 
         scoreboardList.innerHTML = '';
         allData.forEach(p => {
-            const card = document.createElement('div');
-            card.className = `sb-card ${p.isPlayer ? 'highlight' : ''}`;
-            
+            const card = document.createElement('div'); card.className = `sb-card ${p.isPlayer ? 'highlight' : ''}`;
             let rankHtml = `<div class="sb-rank">${p.rank}</div>`;
             if(p.rank === 1) rankHtml = `<div class="sb-rank gold">🥇</div>`;
             if(p.rank === 2) rankHtml = `<div class="sb-rank silver">🥈</div>`;
             if(p.rank === 3) rankHtml = `<div class="sb-rank bronze">🥉</div>`;
 
-            card.innerHTML = `
-                ${rankHtml}
-                <div class="sb-info">
-                    <div class="sb-name">${p.name}</div>
-                    <div class="sb-country">${p.country}</div>
-                </div>
-                <div class="sb-score">${p.bestScore}</div>
-            `;
+            card.innerHTML = `${rankHtml}<div class="sb-info"><div class="sb-name">${p.name}</div><div class="sb-country">${p.country}</div></div><div class="sb-score">${p.bestScore}</div>`;
             scoreboardList.appendChild(card);
         });
-
-        if(allData.length === 0) {
-            scoreboardList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">No players found.</div>';
-        }
+        if(allData.length === 0) scoreboardList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">No players found.</div>';
     } catch(e) {
-        scoreboardList.innerHTML = '<div style="text-align:center; padding:20px; color:#EF4444;">Database connection failed. Check console.</div>';
-        console.error("Firestore Error:", e);
+        scoreboardList.innerHTML = '<div style="text-align:center; padding:20px; color:#EF4444;">Database connection failed.</div>';
     }
 }
 
@@ -460,31 +437,20 @@ function renderShop() {
 window.buyItem = function(type, itemName, cost) { if(playerProfile.coins >= cost) { playerProfile.coins -= cost; if(type === 'Color') playerProfile.unlockedColors.push(itemName); if(type === 'Shape') playerProfile.unlockedShapes.push(itemName); shopCoins.innerText = formatNumber(playerProfile.coins); syncToFirebase(); renderShop(); checkAchievements(); } }
 window.equipItem = function(type, itemName) { if(type === 'Color') playerProfile.targetColor = itemName; if(type === 'Shape') playerProfile.targetShape = itemName; syncToFirebase(); applySettings(); renderShop(); }
 
-// --- LEVEL SELECTION LOGIC ---
-btnBackHome.addEventListener('click', () => { showScreen(screenHome); });
-function buildLevelList() {
-    levelListContainer.innerHTML = ''; btnStartGame.disabled = true; btnStartGame.classList.add('btn-disabled');
-    LEVELS.forEach(lvl => {
-        const isUnlocked = playerProfile.bestScore >= lvl.unlockReq;
-        const card = document.createElement('div'); card.className = `level-card ${isUnlocked ? '' : 'locked'}`;
-        if (isUnlocked && lvl.id === selectedLevelId) card.classList.add('selected');
-        
-        card.innerHTML = `
-            <div class="level-info">
-                <span class="level-name">Level ${lvl.id}</span>
-                <span class="level-time">⏳ ${lvl.time}s | 🎯 Target: ${lvl.size}px</span>
-                ${!isUnlocked ? `<span style="color:#EF4444; font-weight:800; font-size:12px; margin-top:4px;">🔒 NEED ${lvl.unlockReq} BEST SCORE</span>` : ''}
-            </div>
-            <div class="level-status">${isUnlocked ? '🔓' : '🔒'}</div>
-        `;
-        if (isUnlocked) { card.addEventListener('click', () => { document.querySelectorAll('.level-card').forEach(c => c.classList.remove('selected')); card.classList.add('selected'); selectedLevelId = lvl.id; btnStartGame.disabled = false; btnStartGame.classList.remove('btn-disabled'); }); if(lvl.id === selectedLevelId) { btnStartGame.disabled = false; btnStartGame.classList.remove('btn-disabled'); } }
-        levelListContainer.appendChild(card);
-    });
-}
-btnStartGame.addEventListener('click', () => { currentLevelConfig = LEVELS.find(l => l.id === selectedLevelId); startGetReadyPhase(); });
+// --- GAME LOOP (DIRECT PLAY & INFINITE LEVELS) ---
+btnStartGame.addEventListener('click', () => { 
+    currentLevelId = playerProfile.unlockedLevel; // Start at highest unlocked level
+    totalSessionScore = 0; // Reset session score
+    startGetReadyPhase(); 
+});
 
 function startGetReadyPhase() {
-    readyLevelText.innerText = `LEVEL ${currentLevelConfig.id}`; readyTimeText.innerText = `${currentLevelConfig.time} SECONDS`; readyCountdown.innerText = '3'; showScreen(screenReady);
+    currentLevelConfig = LEVELS[currentLevelId - 1]; // Array is 0-indexed
+    readyLevelText.innerText = `LEVEL ${currentLevelId}`; 
+    readyTargetText.innerText = `Target Score: ${currentLevelConfig.targetScore}`; 
+    readyCountdown.innerText = '3'; 
+    showScreen(screenReady);
+
     let count = 3; clearInterval(countdownInterval);
     countdownInterval = setInterval(() => { 
         count--; 
@@ -494,64 +460,134 @@ function startGetReadyPhase() {
     }, 1000);
 }
 
-btnRestart.addEventListener('click', startGetReadyPhase);
+btnRestart.addEventListener('click', () => {
+    currentLevelId = playerProfile.unlockedLevel;
+    totalSessionScore = 0;
+    startGetReadyPhase();
+});
+
 target.addEventListener('pointerdown', handleTargetHit);
 
 function startGame() {
-    score = 0; combo = 0; maxCombo = 0; timeLeft = currentLevelConfig.time; isPlaying = true;
-    target.style.width = `${currentLevelConfig.size}px`; target.style.height = `${currentLevelConfig.size}px`;
-    uiScore.innerText = score; uiCombo.innerText = `${combo}🔥`; uiTime.innerText = timeLeft; showScreen(screenGame);
-    clearInterval(gameInterval); gameInterval = setInterval(updateTimer, 1000);
-    target.style.display = 'block'; moveTarget();
+    currentLevelScore = 0; // Reset level score
+    timeLeft = currentLevelConfig.time; 
+    isPlaying = true;
+
+    target.style.width = `${currentLevelConfig.size}px`; 
+    target.style.height = `${currentLevelConfig.size}px`;
+
+    uiLevel.innerText = currentLevelId; 
+    uiScore.innerText = totalSessionScore; 
+    uiTime.innerText = timeLeft; 
+    uiProgress.style.width = '0%';
+    
+    showScreen(screenGame);
+    clearInterval(gameInterval); 
+    gameInterval = setInterval(updateTimer, 1000);
+
+    target.style.display = 'block'; 
+    moveTarget();
 }
-function updateTimer() { if (!isPlaying) return; timeLeft--; uiTime.innerText = timeLeft; if (timeLeft <= 0) endGame(); }
+
+function updateTimer() { 
+    if (!isPlaying) return; 
+    timeLeft--; 
+    uiTime.innerText = timeLeft; 
+    if (timeLeft <= 0) {
+        evaluateLevelResult();
+    } 
+}
+
 function handleTargetHit(e) { 
     if (!isPlaying) return; 
     e.preventDefault(); 
-    score++; combo++; if (combo > maxCombo) maxCombo = combo; 
-    uiScore.innerText = score; uiCombo.innerText = `${combo}🔥`; 
-    playSound('tap'); if(combo === 10 || combo === 20 || combo === 30) playSound('combo');
+    
+    currentLevelScore++; 
+    totalSessionScore++;
+    
+    uiScore.innerText = totalSessionScore; 
+    
+    // Update Progress Bar
+    let progressPercent = (currentLevelScore / currentLevelConfig.targetScore) * 100;
+    if (progressPercent > 100) progressPercent = 100;
+    uiProgress.style.width = `${progressPercent}%`;
+
+    playSound('tap'); 
+    
     moveTarget(); 
 }
 
 function moveTarget() {
-    const areaRect = playArea.getBoundingClientRect(); const maxX = areaRect.width - currentLevelConfig.size - 20; const maxY = areaRect.height - currentLevelConfig.size - 20;
-    const randomX = Math.floor(Math.random() * maxX) + 10; const randomY = Math.floor(Math.random() * maxY) + 10;
-    target.style.left = `${randomX}px`; target.style.top = `${randomY}px`;
-    target.classList.remove('pop-anim'); void target.offsetWidth; target.classList.add('pop-anim');
+    const areaRect = playArea.getBoundingClientRect(); 
+    const maxX = areaRect.width - currentLevelConfig.size - 20; 
+    const maxY = areaRect.height - currentLevelConfig.size - 20;
+    const randomX = Math.floor(Math.random() * maxX) + 10; 
+    const randomY = Math.floor(Math.random() * maxY) + 10;
+    
+    target.style.left = `${randomX}px`; 
+    target.style.top = `${randomY}px`;
+
+    target.classList.remove('pop-anim'); 
+    void target.offsetWidth; 
+    target.classList.add('pop-anim');
 }
 
-function endGame() {
-    isPlaying = false; clearInterval(gameInterval); target.style.display = 'none';
+function evaluateLevelResult() {
+    isPlaying = false; 
+    clearInterval(gameInterval); 
+    target.style.display = 'none';
 
-    let oldBest = playerProfile.bestScore; let oldLast = playerProfile.lastScore;
-    let coinsEarned = score * 2; playerProfile.coins += coinsEarned;
+    // Did they beat the target score for this level?
+    if (currentLevelScore >= currentLevelConfig.targetScore) {
+        // Success! Move to next level
+        if (currentLevelId > playerProfile.unlockedLevel) {
+            playerProfile.unlockedLevel = currentLevelId; // Permanently unlock
+            syncToFirebase();
+        }
+        
+        currentLevelId++;
+        
+        if (currentLevelId > 100) {
+            endGame(true); // Beat the whole game
+        } else {
+            // Show transition screen briefly
+            showScreen(screenTransition);
+            playSound('combo'); // Success sound
+            setTimeout(() => {
+                startGetReadyPhase();
+            }, 2000);
+        }
+    } else {
+        // Failed. End game.
+        endGame(false);
+    }
+}
 
-    if (score > oldBest && oldBest > 0) { feedbackMessage.innerText = '🏆 NEW PERSONAL BEST!'; feedbackMessage.style.color = '#10B981'; } 
-    else if (score > oldLast && oldLast > 0) { feedbackMessage.innerText = `🎉 +${score - oldLast} IMPROVEMENT!`; feedbackMessage.style.color = '#4F46E5'; } 
-    else if (score === oldLast && oldLast > 0) { feedbackMessage.innerText = '😎 SO CLOSE! TIE!'; feedbackMessage.style.color = '#F59E0B'; } 
-    else if (oldLast > 0) { feedbackMessage.innerText = '💪 KEEP GOING! TRY AGAIN'; feedbackMessage.style.color = '#EF4444'; } 
-    else { feedbackMessage.innerText = '🎮 GREAT FIRST GAME!'; feedbackMessage.style.color = '#4F46E5'; }
+function endGame(wonWholeGame) {
+    let oldBest = playerProfile.bestScore; 
+    let coinsEarned = totalSessionScore * 2; 
+    playerProfile.coins += coinsEarned;
 
-    playerProfile.gamesPlayed++; playerProfile.totalScore += score; playerProfile.lastScore = score;
-    if (score > playerProfile.bestScore) playerProfile.bestScore = score;
+    if (totalSessionScore > oldBest && oldBest > 0) { feedbackMessage.innerText = '🏆 NEW PERSONAL BEST!'; feedbackMessage.style.color = '#10B981'; } 
+    else if (wonWholeGame) { feedbackMessage.innerText = '🔥 YOU BEAT THE GAME!'; feedbackMessage.style.color = '#F59E0B'; }
+    else { feedbackMessage.innerText = '💪 KEEP GOING! TRY AGAIN'; feedbackMessage.style.color = '#EF4444'; } 
 
-    let newlyUnlocked = false; let maxQualify = 1;
-    for(let i=0; i<LEVELS.length; i++){ if(playerProfile.bestScore >= LEVELS[i].unlockReq) maxQualify = LEVELS[i].id; }
-    if (maxQualify > playerProfile.unlockedLevel) { playerProfile.unlockedLevel = maxQualify; newlyUnlocked = true; }
+    playerProfile.gamesPlayed++; 
+    playerProfile.totalScore += totalSessionScore; 
+    
+    if (totalSessionScore > playerProfile.bestScore) {
+        playerProfile.bestScore = totalSessionScore;
+    }
 
     const newAchievements = checkAchievements();
     
     syncToFirebase(); 
     playSound('over');
 
-    resultLevel.innerText = `${currentLevelConfig.id} (${currentLevelConfig.time}s)`;
-    resultScore.innerText = score;
+    resultLevel.innerText = currentLevelId;
+    resultScore.innerText = totalSessionScore;
     resultCoins.innerText = formatNumber(coinsEarned);
     resultBest.innerText = formatNumber(playerProfile.bestScore);
-
-    if (newlyUnlocked) { unlockMessage.innerText = `🎉 LEVEL ${playerProfile.unlockedLevel} UNLOCKED!`; unlockMessage.style.display = 'block'; } 
-    else { unlockMessage.style.display = 'none'; }
 
     if(newAchievements.length > 0) {
         achievementToastName.innerText = newAchievements[0].title;
@@ -564,6 +600,3 @@ function endGame() {
 }
 
 btnResultHome.addEventListener('click', () => { updateHomeUI(); showScreen(screenHome); });
-
-init();
-
