@@ -1,3 +1,25 @@
+// --- FIREBASE CONFIG & IMPORTS ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getFirestore, doc, setDoc, getDocs, collection, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBRGUWoYPQmVqvpNQB5lyqCnq5XuwaO30",
+  authDomain: "my-admin-ce787.firebaseapp.com",
+  projectId: "my-admin-ce787",
+  storageBucket: "my-admin-ce787.firebasestorage.app",
+  messagingSenderId: "228163101396",
+  appId: "1:228163101396:web:6e4264e92e1a7b5138d141",
+  measurementId: "G-EGFR72Z5H1"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// --- PWA SETUP ---
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed:', err));
+}
+
 // --- DOM ELEMENTS ---
 const screens = document.querySelectorAll('.screen');
 const screenStart = document.getElementById('screen-start');
@@ -15,7 +37,6 @@ const screenReady = document.getElementById('screen-ready');
 const screenGame = document.getElementById('screen-game');
 const screenResult = document.getElementById('screen-result');
 
-// Elements
 const btnStartOnboarding = document.getElementById('btn-start-onboarding');
 const inputName = document.getElementById('input-name');
 const btnNextName = document.getElementById('btn-next-name');
@@ -86,6 +107,7 @@ const btnRestart = document.getElementById('btn-restart');
 
 // --- APP STATE ---
 let playerProfile = {
+    id: null,
     name: '', gender: '', country: '', age: '',
     bestScore: 0, totalScore: 0, lastScore: 0, gamesPlayed: 0, coins: 0,
     unlockedLevel: 1, targetColor: 'Red', targetShape: 'Circle',
@@ -95,7 +117,6 @@ let playerProfile = {
     soundEnabled: true
 };
 
-// --- BASE64 SOUNDS ---
 const sfx = {
     tap: new Audio("data:audio/wav;base64,UklGRmYBAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUMBAACA/v/7//f/6//e/83/uf+a/3b/UP8o/wD//P72/vL+3/7S/sz+2/7X/s7+rf6P/n7+Vv4y/hT+8/3h/dX95/3V/cz9vf2g/YH9Vv0j/Qj97Pzm/Nz83/zc/Nz8zvyq/IT8Wvw//Bz88fvh++D72vvR+837tPua+3v7YftM+z/7H/v/+9v7nfsS+x/7Tvsj+zj7KPsT+/T66Prh+tX61/rT+rn6m/p++k76Ifre+Z/5Yfkr+eH4tPh2+FL4NPgc+A=="),
     click: new Audio("data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAAAACA/v/3/+//5//j/+b/4v/b/87/x//E/8f/wf+w/5X/c/9K/yH/9v7f/r7+lv5w/kz+Mv4S/vb93f25/Zn9c/1Q/Tb9Hf0J/fj83/y4/Jr8jPxs/FT8I/z1+9b7rvuV+2H7Kvv7+t/6nPpG+v757Pk="),
@@ -104,10 +125,7 @@ const sfx = {
 };
 
 function playSound(type) {
-    if (playerProfile.soundEnabled) {
-        let snd = sfx[type];
-        if (snd) { snd.currentTime = 0; snd.play().catch(e => console.log("Audio prevented")); }
-    }
+    if (playerProfile.soundEnabled && sfx[type]) { sfx[type].currentTime = 0; sfx[type].play().catch(() => {}); }
 }
 document.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => { if(!btn.classList.contains('btn-disabled')) playSound('click'); });
@@ -158,18 +176,7 @@ const LEVELS = [
     { id: 3, time: 60, size: 60, unlockReq: 100 }, { id: 4, time: 90, size: 50, unlockReq: 180 }, { id: 5, time: 120, size: 40, unlockReq: 300 }
 ];
 
-// --- DUMMY SCOREBOARD DATA ---
-const DUMMY_WORLD = [
-    { name: 'Alex', country: '🇺🇸 USA', score: 450 },
-    { name: 'Rahul', country: '🇮🇳 India', score: 420 },
-    { name: 'Chen', country: '🇨🇳 China', score: 380 },
-    { name: 'Maria', country: '🇧🇷 Brazil', score: 350 },
-    { name: 'David', country: '🇬🇧 UK', score: 310 },
-    { name: 'Ken', country: '🇯🇵 Japan', score: 290 },
-    { name: 'Ali', country: '🇦🇪 UAE', score: 275 }
-];
-
-const worldCountries = ["🇮🇳 India", "🇺🇸 USA", "🇬🇧 UK", "🇨🇦 Canada", "🇦🇺 Australia", "🌎 Other"];
+const worldCountries = ["🇮🇳 India", "🇺🇸 USA", "🇬🇧 UK", "🇨🇦 Canada", "🇦🇺 Australia", "🇦🇪 UAE", "🇵🇰 Pakistan", "🇧🇩 Bangladesh", "🇳🇵 Nepal", "🇱🇰 Sri Lanka", "🇨🇳 China", "🇯🇵 Japan", "🇰🇷 South Korea", "🇸🇬 Singapore", "🇲🇾 Malaysia", "🇮🇩 Indonesia", "🇵🇭 Philippines", "🇹🇭 Thailand", "🇻🇳 Vietnam", "🇩🇪 Germany", "🇫🇷 France", "🇮🇹 Italy", "🇪🇸 Spain", "🇵🇹 Portugal", "🇳🇱 Netherlands", "🇨🇭 Switzerland", "🇸🇪 Sweden", "🇳🇴 Norway", "🇩🇰 Denmark", "🇫🇮 Finland", "🇷🇺 Russia", "🇺🇦 Ukraine", "🇧🇷 Brazil", "🇦🇷 Argentina", "🇨🇴 Colombia", "🇲🇽 Mexico", "🇿🇦 South Africa", "🇳🇬 Nigeria", "🇰🇪 Kenya", "🇪🇬 Egypt", "🇸🇦 Saudi Arabia", "🇮🇷 Iran", "🇹🇷 Turkey", "🇮🇱 Israel", "🇳🇿 New Zealand", "🌎 Other"];
 
 let selectedLevelId = 1; let currentLevelConfig = null;
 let score = 0; let combo = 0; let maxCombo = 0; let timeLeft = 0;
@@ -180,6 +187,9 @@ function init() {
     populateCountries(); loadProfile();
     
     if (playerProfile.name) {
+        if(!playerProfile.id) {
+            playerProfile.id = 'player_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
         if(playerProfile.coins === undefined) playerProfile.coins = 0;
         if(!playerProfile.unlockedColors) playerProfile.unlockedColors = ['Red', 'Blue', 'Green'];
         if(!playerProfile.unlockedShapes) playerProfile.unlockedShapes = ['Circle', 'Square'];
@@ -189,8 +199,26 @@ function init() {
         
         toggleSound.checked = playerProfile.soundEnabled;
         applySettings(); updateHomeUI(); showScreen(screenHome);
+        syncToFirebase(); // Sync on load
     } else {
         showScreen(screenStart);
+    }
+}
+
+// --- FIREBASE SYNC ---
+async function syncToFirebase() {
+    if (!playerProfile.id) return;
+    try {
+        await setDoc(doc(db, "players", playerProfile.id), {
+            name: playerProfile.name,
+            country: playerProfile.country,
+            bestScore: playerProfile.bestScore,
+            totalScore: playerProfile.totalScore,
+            gamesPlayed: playerProfile.gamesPlayed,
+            lastUpdated: Date.now()
+        }, { merge: true });
+    } catch (e) {
+        console.error("Firebase sync error:", e);
     }
 }
 
@@ -226,9 +254,10 @@ selectCountry.addEventListener('change', () => { btnNextCountry.disabled = selec
 btnNextCountry.addEventListener('click', () => { playerProfile.country = selectCountry.value; showScreen(screenAge); });
 btnAges.forEach(btn => { btn.addEventListener('click', () => { btnAges.forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); playerProfile.age = btn.getAttribute('data-age'); btnFinishOnboarding.disabled = false; btnFinishOnboarding.classList.remove('btn-disabled'); }); });
 btnFinishOnboarding.addEventListener('click', () => {
+    playerProfile.id = 'player_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     playerProfile.unlockedLevel = 1; playerProfile.targetColor = 'Red'; playerProfile.targetShape = 'Circle'; playerProfile.coins = 0; playerProfile.unlockedAchievements = [];
     playerProfile.unlockedColors = ['Red', 'Blue', 'Green']; playerProfile.unlockedShapes = ['Circle', 'Square']; playerProfile.soundEnabled = true;
-    saveProfile(); applySettings(); updateHomeUI(); showScreen(screenHome);
+    saveProfile(); applySettings(); updateHomeUI(); syncToFirebase(); showScreen(screenHome);
 });
 
 // --- HOME LOGIC ---
@@ -246,54 +275,79 @@ function updateHomeUI() {
 btnGoLevelSelect.addEventListener('click', () => { buildLevelList(); showScreen(screenLevelSelect); });
 btnGoSettings.addEventListener('click', () => { showScreen(screenSettings); });
 btnBackSettings.addEventListener('click', () => { showScreen(screenHome); });
-
 toggleSound.addEventListener('change', () => { playerProfile.soundEnabled = toggleSound.checked; saveProfile(); });
 
-// --- SCOREBOARD LOGIC (STEP 11) ---
+// --- SCOREBOARD LOGIC (REAL FIREBASE) ---
 btnGoScoreboard.addEventListener('click', () => { renderScoreboard('world'); showScreen(screenScoreboard); });
 btnBackScoreboard.addEventListener('click', () => { showScreen(screenHome); });
 
 tabWorld.addEventListener('click', () => { tabWorld.classList.add('active'); tabLocal.classList.remove('active'); renderScoreboard('world'); });
 tabLocal.addEventListener('click', () => { tabLocal.classList.add('active'); tabWorld.classList.remove('active'); renderScoreboard('local'); });
 
-function renderScoreboard(type) {
-    scoreboardList.innerHTML = '';
+async function renderScoreboard(type) {
+    scoreboardList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Loading global data... 🌍</div>';
     
-    // Dynamic dummy data for local (simulating players from same country)
-    let DUMMY_LOCAL = [
-        { name: 'Amit', score: 390 }, { name: 'Priya', score: 340 }, { name: 'Vikram', score: 300 }, { name: 'Sneha', score: 280 }
-    ].map(u => ({ ...u, country: playerProfile.country }));
-
-    let baseData = type === 'world' ? DUMMY_WORLD : DUMMY_LOCAL;
-    
-    // Inject the real player into the dummy data to simulate live leaderboard
-    let allData = [...baseData];
-    allData.push({ name: playerProfile.name + ' (You)', country: playerProfile.country, score: playerProfile.bestScore, isPlayer: true });
-    
-    // Sort highest score first
-    allData.sort((a,b) => b.score - a.score);
-    // Assign ranks
-    allData.forEach((item, idx) => item.rank = idx + 1);
-
-    allData.forEach(p => {
-        const card = document.createElement('div');
-        card.className = `sb-card ${p.isPlayer ? 'highlight' : ''}`;
+    try {
+        const playersRef = collection(db, "players");
+        // Fetch top 100 overall
+        const q = query(playersRef, orderBy("bestScore", "desc"), limit(100));
+        const querySnapshot = await getDocs(q);
         
-        let rankHtml = `<div class="sb-rank">${p.rank}</div>`;
-        if(p.rank === 1) rankHtml = `<div class="sb-rank gold">🥇</div>`;
-        if(p.rank === 2) rankHtml = `<div class="sb-rank silver">🥈</div>`;
-        if(p.rank === 3) rankHtml = `<div class="sb-rank bronze">🥉</div>`;
+        let allData = [];
+        querySnapshot.forEach((doc) => {
+            allData.push(doc.data());
+        });
 
-        card.innerHTML = `
-            ${rankHtml}
-            <div class="sb-info">
-                <div class="sb-name">${p.name}</div>
-                <div class="sb-country">${p.country}</div>
-            </div>
-            <div class="sb-score">${p.score}</div>
-        `;
-        scoreboardList.appendChild(card);
-    });
+        // Filter locally for country to avoid complex Firestore indexing errors for beginners
+        if(type === 'local') {
+            allData = allData.filter(p => p.country === playerProfile.country);
+        }
+
+        // Ensure current player is highlighted
+        let playerInList = allData.find(p => p.name === playerProfile.name && p.bestScore === playerProfile.bestScore);
+        if (!playerInList && playerProfile.bestScore > 0) {
+            allData.push({
+                name: playerProfile.name + ' (You)',
+                country: playerProfile.country,
+                bestScore: playerProfile.bestScore,
+                isPlayer: true
+            });
+        } else if (playerInList) {
+            playerInList.isPlayer = true;
+            playerInList.name += ' (You)';
+        }
+
+        allData.sort((a,b) => b.bestScore - a.bestScore);
+        allData.forEach((item, idx) => item.rank = idx + 1);
+
+        scoreboardList.innerHTML = '';
+        allData.forEach(p => {
+            const card = document.createElement('div');
+            card.className = `sb-card ${p.isPlayer ? 'highlight' : ''}`;
+            
+            let rankHtml = `<div class="sb-rank">${p.rank}</div>`;
+            if(p.rank === 1) rankHtml = `<div class="sb-rank gold">🥇</div>`;
+            if(p.rank === 2) rankHtml = `<div class="sb-rank silver">🥈</div>`;
+            if(p.rank === 3) rankHtml = `<div class="sb-rank bronze">🥉</div>`;
+
+            card.innerHTML = `
+                ${rankHtml}
+                <div class="sb-info">
+                    <div class="sb-name">${p.name}</div>
+                    <div class="sb-country">${p.country}</div>
+                </div>
+                <div class="sb-score">${p.bestScore}</div>
+            `;
+            scoreboardList.appendChild(card);
+        });
+
+        if(allData.length === 0) {
+            scoreboardList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">No players found.</div>';
+        }
+    } catch(e) {
+        scoreboardList.innerHTML = '<div style="text-align:center; padding:20px; color:#EF4444;">Database connection failed. Check console.</div>';
+        console.error("Firestore Error:", e);
+    }
 }
 
 // --- ACHIEVEMENTS LOGIC ---
@@ -333,7 +387,7 @@ function renderShop() {
         const isEquipped = playerProfile.targetColor === item.name;
         const canAfford = playerProfile.coins >= item.cost;
         const card = document.createElement('div'); card.className = `shop-item ${isEquipped ? 'equipped' : ''}`;
-        let btnHTML = isEquipped ? `<div class="btn-equipped">Equipped</div>` : (isUnlocked ? `<button class="btn-equip" onclick="equipItem('Color', '${item.name}')">Equip</button>` : `<button class="btn-buy ${canAfford ? '' : 'locked'}" onclick="buyItem('Color', '${item.name}', ${item.cost})">🪙 ${formatNumber(item.cost)}</button>`);
+        let btnHTML = isEquipped ? `<div class="btn-equipped">Equipped</div>` : (isUnlocked ? `<button class="btn-equip" onclick="window.equipItem('Color', '${item.name}')">Equip</button>` : `<button class="btn-buy ${canAfford ? '' : 'locked'}" onclick="window.buyItem('Color', '${item.name}', ${item.cost})">🪙 ${formatNumber(item.cost)}</button>`);
         card.innerHTML = `<div class="shop-item-preview-box"><div class="shop-item-preview" style="background-color: ${item.hex}; border-radius: 50%; border: ${item.hex === '#FFFFFF' ? '1px solid #ccc' : 'none'};"></div></div><div class="shop-item-name">${item.name}</div>${btnHTML}`;
         containerColors.appendChild(card);
     });
@@ -344,7 +398,7 @@ function renderShop() {
         const isEquipped = playerProfile.targetShape === item.name;
         const canAfford = playerProfile.coins >= item.cost;
         const card = document.createElement('div'); card.className = `shop-item ${isEquipped ? 'equipped' : ''}`;
-        let btnHTML = isEquipped ? `<div class="btn-equipped">Equipped</div>` : (isUnlocked ? `<button class="btn-equip" onclick="equipItem('Shape', '${item.name}')">Equip</button>` : `<button class="btn-buy ${canAfford ? '' : 'locked'}" onclick="buyItem('Shape', '${item.name}', ${item.cost})">🪙 ${formatNumber(item.cost)}</button>`);
+        let btnHTML = isEquipped ? `<div class="btn-equipped">Equipped</div>` : (isUnlocked ? `<button class="btn-equip" onclick="window.equipItem('Shape', '${item.name}')">Equip</button>` : `<button class="btn-buy ${canAfford ? '' : 'locked'}" onclick="window.buyItem('Shape', '${item.name}', ${item.cost})">🪙 ${formatNumber(item.cost)}</button>`);
         card.innerHTML = `<div class="shop-item-preview-box"><div class="shop-item-preview" style="background-color: var(--primary); border-radius: ${item.css}; clip-path: ${item.clipPath || 'none'}; transform: ${item.transform || 'none'}"></div></div><div class="shop-item-name">${item.name}</div>${btnHTML}`;
         containerShapes.appendChild(card);
     });
@@ -426,6 +480,7 @@ function endGame() {
 
     const newAchievements = checkAchievements();
     saveProfile();
+    syncToFirebase(); // SYNC NEW SCORE TO DATABASE
     playSound('over');
 
     resultLevel.innerText = `${currentLevelConfig.id} (${currentLevelConfig.time}s)`;
