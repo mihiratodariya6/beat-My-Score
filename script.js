@@ -27,6 +27,7 @@ if ('serviceWorker' in navigator) {
 // --- DOM ELEMENTS ---
 const screens = document.querySelectorAll('.screen');
 const screenStart = document.getElementById('screen-start');
+const screenName = document.getElementById('screen-name'); // NEEDED FOR GUEST
 const screenGender = document.getElementById('screen-gender');
 const screenCountry = document.getElementById('screen-country');
 const screenAge = document.getElementById('screen-age');
@@ -36,13 +37,16 @@ const screenShop = document.getElementById('screen-shop');
 const screenAchievements = document.getElementById('screen-achievements');
 const screenScoreboard = document.getElementById('screen-scoreboard');
 const screenReady = document.getElementById('screen-ready');
-const screenTransition = document.getElementById('screen-transition'); // NEW
+const screenTransition = document.getElementById('screen-transition'); 
 const screenGame = document.getElementById('screen-game');
 const screenResult = document.getElementById('screen-result');
 
 const btnLoginGoogle = document.getElementById('btn-login-google');
+const btnGuestLogin = document.getElementById('btn-guest-login'); // NEW GUEST BUTTON
 const loginLoading = document.getElementById('login-loading');
 
+const inputName = document.getElementById('input-name');
+const btnNextName = document.getElementById('btn-next-name');
 const btnGenders = document.querySelectorAll('.btn-gender');
 const btnNextGender = document.getElementById('btn-next-gender');
 const selectCountry = document.getElementById('select-country');
@@ -59,7 +63,7 @@ const homeTotalScore = document.getElementById('home-total-score');
 const homeGamesPlayed = document.getElementById('home-games-played');
 const homeCoins = document.getElementById('home-coins');
 
-const btnStartGame = document.getElementById('btn-start-game'); // Changed to direct play
+const btnStartGame = document.getElementById('btn-start-game'); 
 const btnGoSettings = document.getElementById('btn-go-settings');
 const btnGoShop = document.getElementById('btn-go-shop');
 const btnGoAchievements = document.getElementById('btn-go-achievements');
@@ -85,13 +89,13 @@ const toggleSound = document.getElementById('toggle-sound');
 const btnLogout = document.getElementById('btn-logout');
 
 const readyLevelText = document.getElementById('ready-level-text');
-const readyTargetText = document.getElementById('ready-target-text'); // NEW
+const readyTargetText = document.getElementById('ready-target-text'); 
 const readyCountdown = document.getElementById('ready-countdown');
 
 const uiTime = document.getElementById('ui-time');
-const uiLevel = document.getElementById('ui-level'); // Changed from combo
+const uiLevel = document.getElementById('ui-level'); 
 const uiScore = document.getElementById('ui-score');
-const uiProgress = document.getElementById('ui-progress'); // NEW
+const uiProgress = document.getElementById('ui-progress'); 
 const playArea = document.getElementById('play-area');
 const target = document.getElementById('target');
 
@@ -108,7 +112,7 @@ const btnRestart = document.getElementById('btn-restart');
 
 // --- APP STATE ---
 let playerProfile = {
-    id: null, name: '', gender: '', country: '', age: '',
+    id: null, name: '', gender: '', country: '', age: '', isGuest: false,
     bestScore: 0, totalScore: 0, lastScore: 0, gamesPlayed: 0, coins: 0,
     unlockedLevel: 1, targetColor: 'Red', targetShape: 'Circle',
     unlockedColors: ['Red', 'Blue', 'Green'],
@@ -131,7 +135,6 @@ document.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => { if(!btn.classList.contains('btn-disabled')) playSound('click'); });
 });
 
-// --- DATA ---
 const ACHIEVEMENTS = [
     { id: 'first_game', icon: '🎮', title: 'First Game', desc: 'Complete your first game.', condition: (p) => p.gamesPlayed >= 1 },
     { id: 'score_50', icon: '💯', title: 'Half Century', desc: 'Score 50 points in a single game.', condition: (p) => p.bestScore >= 50 },
@@ -172,24 +175,22 @@ const SHOP_SHAPES = [
     { name: 'Ninja', css: '0', clipPath: 'polygon(50% 0%, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0% 50%, 40% 40%)', cost: 100000 }
 ];
 
-// --- 100 INFINITE LEVELS GENERATION ---
 const LEVELS = [];
 for (let i = 1; i <= 100; i++) {
     LEVELS.push({
         id: i,
-        time: 15 + Math.floor(i / 2), // Gives a bit more time slowly
-        size: Math.max(20, 80 - (i * 2)), // Shrinks to 20px
-        targetScore: 20 + (i * 5) // Score needed in THIS level to proceed
+        time: 15 + Math.floor(i / 2), 
+        size: Math.max(20, 80 - (i * 2)), 
+        targetScore: 20 + (i * 5) 
     });
 }
 
 const worldCountries = ["🇮🇳 India", "🇺🇸 USA", "🇬🇧 UK", "🇨🇦 Canada", "🇦🇺 Australia", "🇦🇪 UAE", "🇵🇰 Pakistan", "🇧🇩 Bangladesh", "🇳🇵 Nepal", "🇱🇰 Sri Lanka", "🇨🇳 China", "🇯🇵 Japan", "🇰🇷 South Korea", "🇸🇬 Singapore", "🇲🇾 Malaysia", "🇮🇩 Indonesia", "🇵🇭 Philippines", "🇹🇭 Thailand", "🇻🇳 Vietnam", "🇩🇪 Germany", "🇫🇷 France", "🇮🇹 Italy", "🇪🇸 Spain", "🇵🇹 Portugal", "🇳🇱 Netherlands", "🇨🇭 Switzerland", "🇸🇪 Sweden", "🇳🇴 Norway", "🇩🇰 Denmark", "🇫🇮 Finland", "🇷🇺 Russia", "🇺🇦 Ukraine", "🇧🇷 Brazil", "🇦🇷 Argentina", "🇨🇴 Colombia", "🇲🇽 Mexico", "🇿🇦 South Africa", "🇳🇬 Nigeria", "🇰🇪 Kenya", "🇪🇬 Egypt", "🇸🇦 Saudi Arabia", "🇮🇷 Iran", "🇹🇷 Turkey", "🇮🇱 Israel", "🇳🇿 New Zealand", "🌎 Other"];
 
-// GAME VARIABLES
 let currentLevelId = 1;
 let currentLevelConfig = null;
 let currentLevelScore = 0; 
-let totalSessionScore = 0; // Total score accumulated in the current run
+let totalSessionScore = 0; 
 let timeLeft = 0;
 let gameInterval; 
 let countdownInterval; 
@@ -204,9 +205,11 @@ function init() {
         if (user) {
             playerProfile.id = user.uid;
             playerProfile.name = user.displayName ? user.displayName.split(' ')[0] : 'Player';
+            playerProfile.isGuest = false;
             
             loginLoading.style.display = 'block';
             btnLoginGoogle.style.display = 'none';
+            btnGuestLogin.style.display = 'none';
 
             try {
                 const docRef = doc(db, "players", user.uid);
@@ -232,9 +235,15 @@ function init() {
                 alert("Could not load profile. Check console.");
             }
         } else {
-            loginLoading.style.display = 'none';
-            btnLoginGoogle.style.display = 'flex';
-            showScreen(screenStart);
+            // Check if Guest
+            if (playerProfile.isGuest && playerProfile.name) {
+                applySettings(); updateHomeUI(); showScreen(screenHome);
+            } else {
+                loginLoading.style.display = 'none';
+                btnLoginGoogle.style.display = 'flex';
+                btnGuestLogin.style.display = 'block';
+                showScreen(screenStart);
+            }
         }
     });
 }
@@ -243,9 +252,11 @@ function showScreen(screenElement) { screens.forEach(s => s.classList.remove('ac
 function formatNumber(num) { return Number(num).toLocaleString('en-IN'); }
 function populateCountries() { worldCountries.forEach(c => { let opt = document.createElement('option'); opt.value = c; opt.innerText = c; selectCountry.appendChild(opt); }); }
 
+// LOGIN BUTTONS
 btnLoginGoogle.addEventListener('click', async () => {
     loginLoading.style.display = 'block';
     btnLoginGoogle.style.display = 'none';
+    btnGuestLogin.style.display = 'none';
     try {
         await signInWithPopup(auth, provider);
     } catch (error) {
@@ -253,16 +264,28 @@ btnLoginGoogle.addEventListener('click', async () => {
         alert("Google Login Failed. Try again or check popup blocker.");
         loginLoading.style.display = 'none';
         btnLoginGoogle.style.display = 'flex';
+        btnGuestLogin.style.display = 'block';
     }
 });
 
+btnGuestLogin.addEventListener('click', () => {
+    playerProfile.id = 'guest_' + Date.now();
+    playerProfile.isGuest = true;
+    showScreen(screenName);
+});
+
 btnLogout.addEventListener('click', async () => {
-    await signOut(auth);
+    if (playerProfile.isGuest) {
+        localStorage.removeItem('beatMyScoreProfile');
+        location.reload();
+    } else {
+        await signOut(auth);
+    }
 });
 
 // --- FIREBASE SYNC ---
 async function syncToFirebase() {
-    if (!playerProfile.id) return;
+    if (!playerProfile.id || playerProfile.isGuest) return; // Do not sync guests
     try {
         await setDoc(doc(db, "players", playerProfile.id), {
             name: playerProfile.name,
@@ -307,6 +330,8 @@ function loadProfile() { const saved = localStorage.getItem('beatMyScoreProfile'
 function saveProfile() { localStorage.setItem('beatMyScoreProfile', JSON.stringify(playerProfile)); }
 
 // --- ONBOARDING CONTINUED ---
+inputName.addEventListener('input', () => { btnNextName.disabled = inputName.value.trim().length === 0; btnNextName.classList.toggle('btn-disabled', btnNextName.disabled); });
+btnNextName.addEventListener('click', () => { playerProfile.name = inputName.value.trim(); showScreen(screenGender); });
 btnGenders.forEach(btn => { btn.addEventListener('click', () => { btnGenders.forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); playerProfile.gender = btn.getAttribute('data-gender'); btnNextGender.disabled = false; btnNextGender.classList.remove('btn-disabled'); }); });
 btnNextGender.addEventListener('click', () => { showScreen(screenCountry); });
 selectCountry.addEventListener('change', () => { btnNextCountry.disabled = selectCountry.value === ""; btnNextCountry.classList.toggle('btn-disabled', btnNextCountry.disabled); });
@@ -317,12 +342,12 @@ btnFinishOnboarding.addEventListener('click', async () => {
     playerProfile.unlockedColors = ['Red', 'Blue', 'Green']; playerProfile.unlockedShapes = ['Circle', 'Square']; playerProfile.soundEnabled = true;
     
     applySettings(); updateHomeUI(); showScreen(screenHome);
-    await syncToFirebase(); 
+    if(playerProfile.isGuest) { saveProfile(); } else { await syncToFirebase(); }
 });
 
 // --- HOME LOGIC ---
 function updateHomeUI() {
-    displayName.innerText = playerProfile.name;
+    displayName.innerText = playerProfile.name + (playerProfile.isGuest ? " (Guest)" : "");
     displayAvatar.innerText = playerProfile.gender === 'Male' ? '👨' : (playerProfile.gender === 'Female' ? '👩' : '👤');
     displayCountry.innerText = playerProfile.country.split(' ')[0];
     displayLevelBadge.innerText = `LEVEL ${playerProfile.unlockedLevel}`;
@@ -334,7 +359,7 @@ function updateHomeUI() {
 
 btnGoSettings.addEventListener('click', () => { showScreen(screenSettings); });
 btnBackSettings.addEventListener('click', () => { showScreen(screenHome); });
-toggleSound.addEventListener('change', () => { playerProfile.soundEnabled = toggleSound.checked; syncToFirebase(); });
+toggleSound.addEventListener('change', () => { playerProfile.soundEnabled = toggleSound.checked; if(playerProfile.isGuest) saveProfile(); else syncToFirebase(); });
 
 // --- SCOREBOARD LOGIC ---
 btnGoScoreboard.addEventListener('click', () => { renderScoreboard('world'); showScreen(screenScoreboard); });
@@ -345,20 +370,32 @@ tabLocal.addEventListener('click', () => { tabLocal.classList.add('active'); tab
 
 async function renderScoreboard(type) {
     scoreboardList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">Loading global data... 🌍</div>';
+    
     try {
         const playersRef = collection(db, "players");
         const q = query(playersRef, orderBy("bestScore", "desc"), limit(100));
         const querySnapshot = await getDocs(q);
+        
         let allData = [];
-        querySnapshot.forEach((doc) => { allData.push(doc.data()); });
+        querySnapshot.forEach((doc) => {
+            allData.push(doc.data());
+        });
 
-        if(type === 'local') { allData = allData.filter(p => p.country === playerProfile.country); }
+        if(type === 'local') {
+            allData = allData.filter(p => p.country === playerProfile.country);
+        }
 
         let playerInList = allData.find(p => p.name === playerProfile.name && p.bestScore === playerProfile.bestScore);
         if (!playerInList && playerProfile.bestScore > 0) {
-            allData.push({ name: playerProfile.name + ' (You)', country: playerProfile.country, bestScore: playerProfile.bestScore, isPlayer: true });
+            allData.push({
+                name: playerProfile.name + ' (You)',
+                country: playerProfile.country,
+                bestScore: playerProfile.bestScore,
+                isPlayer: true
+            });
         } else if (playerInList) {
-            playerInList.isPlayer = true; playerInList.name += ' (You)';
+            playerInList.isPlayer = true;
+            playerInList.name += ' (You)';
         }
 
         allData.sort((a,b) => b.bestScore - a.bestScore);
@@ -366,18 +403,31 @@ async function renderScoreboard(type) {
 
         scoreboardList.innerHTML = '';
         allData.forEach(p => {
-            const card = document.createElement('div'); card.className = `sb-card ${p.isPlayer ? 'highlight' : ''}`;
+            const card = document.createElement('div');
+            card.className = `sb-card ${p.isPlayer ? 'highlight' : ''}`;
+            
             let rankHtml = `<div class="sb-rank">${p.rank}</div>`;
             if(p.rank === 1) rankHtml = `<div class="sb-rank gold">🥇</div>`;
             if(p.rank === 2) rankHtml = `<div class="sb-rank silver">🥈</div>`;
             if(p.rank === 3) rankHtml = `<div class="sb-rank bronze">🥉</div>`;
 
-            card.innerHTML = `${rankHtml}<div class="sb-info"><div class="sb-name">${p.name}</div><div class="sb-country">${p.country}</div></div><div class="sb-score">${p.bestScore}</div>`;
+            card.innerHTML = `
+                ${rankHtml}
+                <div class="sb-info">
+                    <div class="sb-name">${p.name}</div>
+                    <div class="sb-country">${p.country}</div>
+                </div>
+                <div class="sb-score">${p.bestScore}</div>
+            `;
             scoreboardList.appendChild(card);
         });
-        if(allData.length === 0) scoreboardList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">No players found.</div>';
+
+        if(allData.length === 0) {
+            scoreboardList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);">No players found.</div>';
+        }
     } catch(e) {
         scoreboardList.innerHTML = '<div style="text-align:center; padding:20px; color:#EF4444;">Database connection failed.</div>';
+        console.error("Firestore Error:", e);
     }
 }
 
@@ -434,18 +484,18 @@ function renderShop() {
         containerShapes.appendChild(card);
     });
 }
-window.buyItem = function(type, itemName, cost) { if(playerProfile.coins >= cost) { playerProfile.coins -= cost; if(type === 'Color') playerProfile.unlockedColors.push(itemName); if(type === 'Shape') playerProfile.unlockedShapes.push(itemName); shopCoins.innerText = formatNumber(playerProfile.coins); syncToFirebase(); renderShop(); checkAchievements(); } }
-window.equipItem = function(type, itemName) { if(type === 'Color') playerProfile.targetColor = itemName; if(type === 'Shape') playerProfile.targetShape = itemName; syncToFirebase(); applySettings(); renderShop(); }
+window.buyItem = function(type, itemName, cost) { if(playerProfile.coins >= cost) { playerProfile.coins -= cost; if(type === 'Color') playerProfile.unlockedColors.push(itemName); if(type === 'Shape') playerProfile.unlockedShapes.push(itemName); shopCoins.innerText = formatNumber(playerProfile.coins); if(playerProfile.isGuest) saveProfile(); else syncToFirebase(); renderShop(); checkAchievements(); } }
+window.equipItem = function(type, itemName) { if(type === 'Color') playerProfile.targetColor = itemName; if(type === 'Shape') playerProfile.targetShape = itemName; if(playerProfile.isGuest) saveProfile(); else syncToFirebase(); applySettings(); renderShop(); }
 
 // --- GAME LOOP (DIRECT PLAY & INFINITE LEVELS) ---
 btnStartGame.addEventListener('click', () => { 
-    currentLevelId = playerProfile.unlockedLevel; // Start at highest unlocked level
-    totalSessionScore = 0; // Reset session score
+    currentLevelId = playerProfile.unlockedLevel; 
+    totalSessionScore = 0; 
     startGetReadyPhase(); 
 });
 
 function startGetReadyPhase() {
-    currentLevelConfig = LEVELS[currentLevelId - 1]; // Array is 0-indexed
+    currentLevelConfig = LEVELS[currentLevelId - 1]; 
     readyLevelText.innerText = `LEVEL ${currentLevelId}`; 
     readyTargetText.innerText = `Target Score: ${currentLevelConfig.targetScore}`; 
     readyCountdown.innerText = '3'; 
@@ -469,7 +519,7 @@ btnRestart.addEventListener('click', () => {
 target.addEventListener('pointerdown', handleTargetHit);
 
 function startGame() {
-    currentLevelScore = 0; // Reset level score
+    currentLevelScore = 0; 
     timeLeft = currentLevelConfig.time; 
     isPlaying = true;
 
@@ -507,13 +557,11 @@ function handleTargetHit(e) {
     
     uiScore.innerText = totalSessionScore; 
     
-    // Update Progress Bar
     let progressPercent = (currentLevelScore / currentLevelConfig.targetScore) * 100;
     if (progressPercent > 100) progressPercent = 100;
     uiProgress.style.width = `${progressPercent}%`;
 
     playSound('tap'); 
-    
     moveTarget(); 
 }
 
@@ -537,28 +585,24 @@ function evaluateLevelResult() {
     clearInterval(gameInterval); 
     target.style.display = 'none';
 
-    // Did they beat the target score for this level?
     if (currentLevelScore >= currentLevelConfig.targetScore) {
-        // Success! Move to next level
-        if (currentLevelId > playerProfile.unlockedLevel) {
-            playerProfile.unlockedLevel = currentLevelId; // Permanently unlock
-            syncToFirebase();
+        if (currentLevelId >= playerProfile.unlockedLevel) {
+            playerProfile.unlockedLevel = currentLevelId + 1; 
+            if(playerProfile.isGuest) saveProfile(); else syncToFirebase();
         }
         
         currentLevelId++;
         
         if (currentLevelId > 100) {
-            endGame(true); // Beat the whole game
+            endGame(true); 
         } else {
-            // Show transition screen briefly
             showScreen(screenTransition);
-            playSound('combo'); // Success sound
+            playSound('combo'); 
             setTimeout(() => {
                 startGetReadyPhase();
             }, 2000);
         }
     } else {
-        // Failed. End game.
         endGame(false);
     }
 }
@@ -581,7 +625,7 @@ function endGame(wonWholeGame) {
 
     const newAchievements = checkAchievements();
     
-    syncToFirebase(); 
+    if(playerProfile.isGuest) saveProfile(); else syncToFirebase(); 
     playSound('over');
 
     resultLevel.innerText = currentLevelId;
