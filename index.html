@@ -101,10 +101,31 @@
 
             <div class="home-actions">
                 <button id="btn-start-game" class="btn-huge sound-btn">▶ TAP TO PLAY</button>
+                <!-- SCOREBOARD ADD KARYU -->
+                <button id="btn-go-scoreboard" class="btn-secondary sound-btn">🏆 SCOREBOARD</button>
                 <button id="btn-go-achievements" class="btn-secondary sound-btn">⭐ ACHIEVEMENTS</button>
                 <button id="btn-go-shop" class="btn-secondary sound-btn" style="background:#F59E0B; color:white;">🛒 ITEM SHOP</button>
                 <button id="btn-go-settings" class="btn-secondary sound-btn">⚙ SETTINGS</button>
             </div>
+        </div>
+
+        <!-- SCOREBOARD SCREEN ADD KARYU -->
+        <div id="screen-scoreboard" class="screen">
+            <div class="header-with-back" style="justify-content: space-between;">
+                <div style="display:flex; align-items:center; gap:16px;">
+                    <button id="btn-back-scoreboard" class="btn-icon sound-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <h2 class="page-title">Leaderboard</h2>
+                </div>
+            </div>
+
+            <div class="shop-tabs" style="margin-top: 12px;">
+                <button id="tab-world" class="shop-tab active sound-btn">🌎 World</button>
+                <button id="tab-local" class="shop-tab sound-btn">📍 Country</button>
+            </div>
+
+            <div id="scoreboard-list" class="scoreboard-list"></div>
         </div>
 
         <!-- ACHIEVEMENTS SCREEN -->
@@ -163,7 +184,6 @@
             </div>
 
             <h3 class="settings-section-title" style="margin-top: 30px;">Data</h3>
-            <!-- Logout ni jagya par RESET PROGRESS aavi gayu -->
             <button id="btn-reset-data" class="btn-secondary sound-btn" style="color: #EF4444; border: 2px solid #EF4444; background: transparent;">🗑️ RESET PROGRESS</button>
         </div>
 
@@ -247,8 +267,9 @@
                 <button id="btn-restart" class="btn-secondary sound-btn" style="margin: 0;">🔄 RETRY LEVEL</button>
             </div>
         </div>
+    </div>
 
-    <!-- Firebase SDK kadhi nakhyu -->
+    <!-- Script Import -->
     <script src="script.js"></script>
 </body>
 </html>
