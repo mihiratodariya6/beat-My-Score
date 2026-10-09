@@ -20,13 +20,13 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Sync Dependencies
         run: |
           npm install
           npx cap sync android
+
+      - name: Grant Gradlew Permission
+        run: cd android && chmod +x gradlew
 
       - name: Build APK File
         working-directory: ./android
