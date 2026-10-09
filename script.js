@@ -1,7 +1,9 @@
 // --- FIREBASE CONFIG & IMPORTS ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, doc, setDoc, getDocs, collection, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
+// YOUR FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyBRGUWoYPQmVqvpNQB5lyqCnq5XuwaO30",
   authDomain: "my-admin-ce787.firebaseapp.com",
@@ -14,6 +16,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
 // --- PWA SETUP ---
 if ('serviceWorker' in navigator) {
@@ -23,7 +27,6 @@ if ('serviceWorker' in navigator) {
 // --- DOM ELEMENTS ---
 const screens = document.querySelectorAll('.screen');
 const screenStart = document.getElementById('screen-start');
-const screenName = document.getElementById('screen-name');
 const screenGender = document.getElementById('screen-gender');
 const screenCountry = document.getElementById('screen-country');
 const screenAge = document.getElementById('screen-age');
@@ -37,9 +40,9 @@ const screenReady = document.getElementById('screen-ready');
 const screenGame = document.getElementById('screen-game');
 const screenResult = document.getElementById('screen-result');
 
-const btnStartOnboarding = document.getElementById('btn-start-onboarding');
-const inputName = document.getElementById('input-name');
-const btnNextName = document.getElementById('btn-next-name');
+const btnLoginGoogle = document.getElementById('btn-login-google');
+const loginLoading = document.getElementById('login-loading');
+
 const btnGenders = document.querySelectorAll('.btn-gender');
 const btnNextGender = document.getElementById('btn-next-gender');
 const selectCountry = document.getElementById('select-country');
@@ -79,6 +82,7 @@ const containerShapes = document.getElementById('shop-container-shapes');
 
 const btnBackSettings = document.getElementById('btn-back-settings');
 const toggleSound = document.getElementById('toggle-sound');
+const btnLogout = document.getElementById('btn-logout');
 
 const btnBackHome = document.getElementById('btn-back-home');
 const levelListContainer = document.getElementById('level-list');
@@ -107,8 +111,7 @@ const btnRestart = document.getElementById('btn-restart');
 
 // --- APP STATE ---
 let playerProfile = {
-    id: null,
-    name: '', gender: '', country: '', age: '',
+    id: null, name: '', gender: '', country: '', age: '',
     bestScore: 0, totalScore: 0, lastScore: 0, gamesPlayed: 0, coins: 0,
     unlockedLevel: 1, targetColor: 'Red', targetShape: 'Circle',
     unlockedColors: ['Red', 'Blue', 'Green'],
@@ -171,10 +174,16 @@ const SHOP_SHAPES = [
     { name: 'Ninja', css: '0', clipPath: 'polygon(50% 0%, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0% 50%, 40% 40%)', cost: 100000 }
 ];
 
-const LEVELS = [
-    { id: 1, time: 30, size: 80, unlockReq: 0 }, { id: 2, time: 45, size: 70, unlockReq: 50 },
-    { id: 3, time: 60, size: 60, unlockReq: 100 }, { id: 4, time: 90, size: 50, unlockReq: 180 }, { id: 5, time: 120, size: 40, unlockReq: 300 }
-];
+// --- 100 INFINITE LEVELS GENERATION ---
+const LEVELS = [];
+for (let i = 1; i <= 100; i++) {
+    LEVELS.push({
+        id: i,
+        time: Math.min(60, 25 + (i * 5)), // Cap at 60s
+        size: Math.max(20, 85 - (i * 5)), // Shrinks to 20px
+        unlockReq: (i - 1) * 30 // E.g., Level 2 = 30 score, Level 3 = 60...
+    });
+}
 
 const worldCountries = ["🇮🇳 India", "🇺🇸 USA", "🇬🇧 UK", "🇨🇦 Canada", "🇦🇺 Australia", "🇦🇪 UAE", "🇵🇰 Pakistan", "🇧🇩 Bangladesh", "🇳🇵 Nepal", "🇱🇰 Sri Lanka", "🇨🇳 China", "🇯🇵 Japan", "🇰🇷 South Korea", "🇸🇬 Singapore", "🇲🇾 Malaysia", "🇮🇩 Indonesia", "🇵🇭 Philippines", "🇹🇭 Thailand", "🇻🇳 Vietnam", "🇩🇪 Germany", "🇫🇷 France", "🇮🇹 Italy", "🇪🇸 Spain", "🇵🇹 Portugal", "🇳🇱 Netherlands", "🇨🇭 Switzerland", "🇸🇪 Sweden", "🇳🇴 Norway", "🇩🇰 Denmark", "🇫🇮 Finland", "🇷🇺 Russia", "🇺🇦 Ukraine", "🇧🇷 Brazil", "🇦🇷 Argentina", "🇨🇴 Colombia", "🇲🇽 Mexico", "🇿🇦 South Africa", "🇳🇬 Nigeria", "🇰🇪 Kenya", "🇪🇬 Egypt", "🇸🇦 Saudi Arabia", "🇮🇷 Iran", "🇹🇷 Turkey", "🇮🇱 Israel", "🇳🇿 New Zealand", "🌎 Other"];
 
@@ -182,28 +191,67 @@ let selectedLevelId = 1; let currentLevelConfig = null;
 let score = 0; let combo = 0; let maxCombo = 0; let timeLeft = 0;
 let gameInterval; let countdownInterval; let isPlaying = false;
 
-// --- INITIALIZATION ---
-function init() {
-    populateCountries(); loadProfile();
-    
-    if (playerProfile.name) {
-        if(!playerProfile.id) {
-            playerProfile.id = 'player_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        }
-        if(playerProfile.coins === undefined) playerProfile.coins = 0;
-        if(!playerProfile.unlockedColors) playerProfile.unlockedColors = ['Red', 'Blue', 'Green'];
-        if(!playerProfile.unlockedShapes) playerProfile.unlockedShapes = ['Circle', 'Square'];
-        if(!playerProfile.targetShape) playerProfile.targetShape = 'Circle';
-        if(!playerProfile.unlockedAchievements) playerProfile.unlockedAchievements = [];
-        if(playerProfile.soundEnabled === undefined) playerProfile.soundEnabled = true;
+// --- AUTH & INITIALIZATION ---
+function showScreen(screenElement) { screens.forEach(s => s.classList.remove('active')); screenElement.classList.add('active'); }
+function formatNumber(num) { return Number(num).toLocaleString('en-IN'); }
+function populateCountries() { worldCountries.forEach(c => { let opt = document.createElement('option'); opt.value = c; opt.innerText = c; selectCountry.appendChild(opt); }); }
+
+populateCountries();
+
+// Handle Auth State Change
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        playerProfile.id = user.uid;
+        // Split name to keep it short if needed, or use full name
+        playerProfile.name = user.displayName ? user.displayName.split(' ')[0] : 'Player';
         
-        toggleSound.checked = playerProfile.soundEnabled;
-        applySettings(); updateHomeUI(); showScreen(screenHome);
-        syncToFirebase(); // Sync on load
+        loginLoading.style.display = 'block';
+        btnLoginGoogle.style.display = 'none';
+
+        try {
+            const docRef = doc(db, "players", user.uid);
+            const docSnap = await getDoc(docRef);
+            
+            if (docSnap.exists()) {
+                // Returning user: Load cloud data
+                playerProfile = { ...playerProfile, ...docSnap.data() };
+                
+                // Safety defaults
+                if(!playerProfile.unlockedColors) playerProfile.unlockedColors = ['Red', 'Blue', 'Green'];
+                if(!playerProfile.unlockedShapes) playerProfile.unlockedShapes = ['Circle', 'Square'];
+                if(!playerProfile.targetShape) playerProfile.targetShape = 'Circle';
+                if(!playerProfile.unlockedAchievements) playerProfile.unlockedAchievements = [];
+                if(playerProfile.soundEnabled === undefined) playerProfile.soundEnabled = true;
+                
+                toggleSound.checked = playerProfile.soundEnabled;
+                applySettings(); updateHomeUI(); showScreen(screenHome);
+            } else {
+                // New user: Needs onboarding (Gender, Country, Age)
+                showScreen(screenGender);
+            }
+        } catch(e) {
+            console.error("Error fetching profile", e);
+            alert("Could not load profile. Check console.");
+        }
     } else {
+        loginLoading.style.display = 'none';
+        btnLoginGoogle.style.display = 'flex';
         showScreen(screenStart);
     }
-}
+});
+
+btnLoginGoogle.addEventListener('click', async () => {
+    try {
+        await signInWithPopup(auth, provider);
+    } catch (error) {
+        console.error("Auth Error", error);
+        alert("Google Login Failed. Make sure you added your Codespace URL to Firebase Authorized Domains!");
+    }
+});
+
+btnLogout.addEventListener('click', async () => {
+    await signOut(auth);
+});
 
 // --- FIREBASE SYNC ---
 async function syncToFirebase() {
@@ -211,10 +259,20 @@ async function syncToFirebase() {
     try {
         await setDoc(doc(db, "players", playerProfile.id), {
             name: playerProfile.name,
+            gender: playerProfile.gender,
             country: playerProfile.country,
+            age: playerProfile.age,
             bestScore: playerProfile.bestScore,
             totalScore: playerProfile.totalScore,
             gamesPlayed: playerProfile.gamesPlayed,
+            coins: playerProfile.coins,
+            unlockedLevel: playerProfile.unlockedLevel,
+            targetColor: playerProfile.targetColor,
+            targetShape: playerProfile.targetShape,
+            unlockedColors: playerProfile.unlockedColors,
+            unlockedShapes: playerProfile.unlockedShapes,
+            unlockedAchievements: playerProfile.unlockedAchievements,
+            soundEnabled: playerProfile.soundEnabled,
             lastUpdated: Date.now()
         }, { merge: true });
     } catch (e) {
@@ -238,26 +296,18 @@ function applySettings() {
     }
 }
 
-function formatNumber(num) { return Number(num).toLocaleString('en-IN'); }
-function populateCountries() { worldCountries.forEach(c => { let opt = document.createElement('option'); opt.value = c; opt.innerText = c; selectCountry.appendChild(opt); }); }
-function loadProfile() { const saved = localStorage.getItem('beatMyScoreProfile'); if (saved) playerProfile = { ...playerProfile, ...JSON.parse(saved) }; }
-function saveProfile() { localStorage.setItem('beatMyScoreProfile', JSON.stringify(playerProfile)); }
-function showScreen(screenElement) { screens.forEach(s => s.classList.remove('active')); screenElement.classList.add('active'); }
-
-// --- ONBOARDING ---
-btnStartOnboarding.addEventListener('click', () => { if(playerProfile.name) localStorage.removeItem('beatMyScoreProfile'); showScreen(screenName); });
-inputName.addEventListener('input', () => { btnNextName.disabled = inputName.value.trim().length === 0; btnNextName.classList.toggle('btn-disabled', btnNextName.disabled); });
-btnNextName.addEventListener('click', () => { playerProfile.name = inputName.value.trim(); showScreen(screenGender); });
+// --- ONBOARDING CONTINUED ---
 btnGenders.forEach(btn => { btn.addEventListener('click', () => { btnGenders.forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); playerProfile.gender = btn.getAttribute('data-gender'); btnNextGender.disabled = false; btnNextGender.classList.remove('btn-disabled'); }); });
 btnNextGender.addEventListener('click', () => { showScreen(screenCountry); });
 selectCountry.addEventListener('change', () => { btnNextCountry.disabled = selectCountry.value === ""; btnNextCountry.classList.toggle('btn-disabled', btnNextCountry.disabled); });
 btnNextCountry.addEventListener('click', () => { playerProfile.country = selectCountry.value; showScreen(screenAge); });
 btnAges.forEach(btn => { btn.addEventListener('click', () => { btnAges.forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); playerProfile.age = btn.getAttribute('data-age'); btnFinishOnboarding.disabled = false; btnFinishOnboarding.classList.remove('btn-disabled'); }); });
-btnFinishOnboarding.addEventListener('click', () => {
-    playerProfile.id = 'player_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+btnFinishOnboarding.addEventListener('click', async () => {
     playerProfile.unlockedLevel = 1; playerProfile.targetColor = 'Red'; playerProfile.targetShape = 'Circle'; playerProfile.coins = 0; playerProfile.unlockedAchievements = [];
     playerProfile.unlockedColors = ['Red', 'Blue', 'Green']; playerProfile.unlockedShapes = ['Circle', 'Square']; playerProfile.soundEnabled = true;
-    saveProfile(); applySettings(); updateHomeUI(); syncToFirebase(); showScreen(screenHome);
+    
+    applySettings(); updateHomeUI(); showScreen(screenHome);
+    await syncToFirebase(); // Save initial setup
 });
 
 // --- HOME LOGIC ---
@@ -275,7 +325,7 @@ function updateHomeUI() {
 btnGoLevelSelect.addEventListener('click', () => { buildLevelList(); showScreen(screenLevelSelect); });
 btnGoSettings.addEventListener('click', () => { showScreen(screenSettings); });
 btnBackSettings.addEventListener('click', () => { showScreen(screenHome); });
-toggleSound.addEventListener('change', () => { playerProfile.soundEnabled = toggleSound.checked; saveProfile(); });
+toggleSound.addEventListener('change', () => { playerProfile.soundEnabled = toggleSound.checked; syncToFirebase(); });
 
 // --- SCOREBOARD LOGIC (REAL FIREBASE) ---
 btnGoScoreboard.addEventListener('click', () => { renderScoreboard('world'); showScreen(screenScoreboard); });
@@ -289,7 +339,6 @@ async function renderScoreboard(type) {
     
     try {
         const playersRef = collection(db, "players");
-        // Fetch top 100 overall
         const q = query(playersRef, orderBy("bestScore", "desc"), limit(100));
         const querySnapshot = await getDocs(q);
         
@@ -298,12 +347,11 @@ async function renderScoreboard(type) {
             allData.push(doc.data());
         });
 
-        // Filter locally for country to avoid complex Firestore indexing errors for beginners
         if(type === 'local') {
             allData = allData.filter(p => p.country === playerProfile.country);
         }
 
-        // Ensure current player is highlighted
+        // Highlight current user
         let playerInList = allData.find(p => p.name === playerProfile.name && p.bestScore === playerProfile.bestScore);
         if (!playerInList && playerProfile.bestScore > 0) {
             allData.push({
@@ -403,18 +451,26 @@ function renderShop() {
         containerShapes.appendChild(card);
     });
 }
-window.buyItem = function(type, itemName, cost) { if(playerProfile.coins >= cost) { playerProfile.coins -= cost; if(type === 'Color') playerProfile.unlockedColors.push(itemName); if(type === 'Shape') playerProfile.unlockedShapes.push(itemName); shopCoins.innerText = formatNumber(playerProfile.coins); saveProfile(); renderShop(); checkAchievements(); } }
-window.equipItem = function(type, itemName) { if(type === 'Color') playerProfile.targetColor = itemName; if(type === 'Shape') playerProfile.targetShape = itemName; saveProfile(); applySettings(); renderShop(); }
+window.buyItem = function(type, itemName, cost) { if(playerProfile.coins >= cost) { playerProfile.coins -= cost; if(type === 'Color') playerProfile.unlockedColors.push(itemName); if(type === 'Shape') playerProfile.unlockedShapes.push(itemName); shopCoins.innerText = formatNumber(playerProfile.coins); syncToFirebase(); renderShop(); checkAchievements(); } }
+window.equipItem = function(type, itemName) { if(type === 'Color') playerProfile.targetColor = itemName; if(type === 'Shape') playerProfile.targetShape = itemName; syncToFirebase(); applySettings(); renderShop(); }
 
-// --- GAME LOOP ---
+// --- LEVEL SELECTION LOGIC ---
 btnBackHome.addEventListener('click', () => { showScreen(screenHome); });
 function buildLevelList() {
     levelListContainer.innerHTML = ''; btnStartGame.disabled = true; btnStartGame.classList.add('btn-disabled');
     LEVELS.forEach(lvl => {
-        const isUnlocked = playerProfile.unlockedLevel >= lvl.id;
+        const isUnlocked = playerProfile.bestScore >= lvl.unlockReq;
         const card = document.createElement('div'); card.className = `level-card ${isUnlocked ? '' : 'locked'}`;
         if (isUnlocked && lvl.id === selectedLevelId) card.classList.add('selected');
-        card.innerHTML = `<div class="level-info"><span class="level-name">Level ${lvl.id}</span><span class="level-time">${lvl.time} Seconds ${!isUnlocked ? `(Requires Score ${lvl.unlockReq})` : ''}</span></div><div class="level-status">${isUnlocked ? '🔓' : '🔒'}</div>`;
+        
+        card.innerHTML = `
+            <div class="level-info">
+                <span class="level-name">Level ${lvl.id}</span>
+                <span class="level-time">⏳ ${lvl.time}s | 🎯 Target: ${lvl.size}px</span>
+                ${!isUnlocked ? `<span style="color:#EF4444; font-weight:800; font-size:12px; margin-top:4px;">🔒 NEED ${lvl.unlockReq} BEST SCORE</span>` : ''}
+            </div>
+            <div class="level-status">${isUnlocked ? '🔓' : '🔒'}</div>
+        `;
         if (isUnlocked) { card.addEventListener('click', () => { document.querySelectorAll('.level-card').forEach(c => c.classList.remove('selected')); card.classList.add('selected'); selectedLevelId = lvl.id; btnStartGame.disabled = false; btnStartGame.classList.remove('btn-disabled'); }); if(lvl.id === selectedLevelId) { btnStartGame.disabled = false; btnStartGame.classList.remove('btn-disabled'); } }
         levelListContainer.appendChild(card);
     });
@@ -479,7 +535,7 @@ function endGame() {
     if (maxQualify > playerProfile.unlockedLevel) { playerProfile.unlockedLevel = maxQualify; newlyUnlocked = true; }
 
     const newAchievements = checkAchievements();
-    saveProfile();
+    
     syncToFirebase(); // SYNC NEW SCORE TO DATABASE
     playSound('over');
 
@@ -502,4 +558,3 @@ function endGame() {
 }
 
 btnResultHome.addEventListener('click', () => { updateHomeUI(); showScreen(screenHome); });
-init();

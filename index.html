@@ -12,21 +12,17 @@
 <body>
     <div id="app-container">
         
-        <!-- START SCREEN -->
-        <div id="screen-start" class="screen">
+        <!-- START SCREEN (WITH GOOGLE LOGIN) -->
+        <div id="screen-start" class="screen active">
             <h1 class="logo">🎯<br>Beat My Score</h1>
-            <p class="subtitle">Ready to beat the world?</p>
-            <button id="btn-start-onboarding" class="btn-primary">START</button>
+            <p class="subtitle">Log in to save your progress forever!</p>
+            <button id="btn-login-google" class="btn-primary" style="background-color: white; color: black; display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 20px;">
+                <img src="https://img.icons8.com/color/48/google-logo.png" style="width: 28px;"> LOGIN WITH GOOGLE
+            </button>
+            <div id="login-loading" style="display: none; text-align: center; margin-top: 20px; color: var(--text-muted); font-weight: bold;">Loading Profile... ⏳</div>
         </div>
 
-        <!-- ONBOARDING: NAME -->
-        <div id="screen-name" class="screen">
-            <h2 class="step-title">What should we call you?</h2>
-            <input type="text" id="input-name" class="input-field" placeholder="e.g. Rahul" maxlength="15" autocomplete="off">
-            <button id="btn-next-name" class="btn-primary btn-disabled" disabled>NEXT</button>
-        </div>
-
-        <!-- ONBOARDING: GENDER -->
+        <!-- ONBOARDING: GENDER (Name is fetched from Google automatically) -->
         <div id="screen-gender" class="screen">
             <h2 class="step-title">Select your gender</h2>
             <div class="grid-options">
@@ -74,7 +70,7 @@
                     <div id="display-avatar" class="profile-avatar">👨</div>
                     <div class="profile-info-new">
                         <div class="name-row">
-                            <span id="display-name" class="profile-name">Player</span>
+                            <span id="display-name" class="profile-name" style="font-size: 20px;">Player</span>
                             <span id="display-country" class="profile-flag">🌎</span>
                         </div>
                         <div id="display-level-badge" class="level-badge">LEVEL 1</div>
@@ -124,9 +120,7 @@
                 <button id="tab-local" class="shop-tab sound-btn">📍 Country</button>
             </div>
 
-            <div id="scoreboard-list" class="scoreboard-list">
-                <!-- Populated by JS -->
-            </div>
+            <div id="scoreboard-list" class="scoreboard-list"></div>
         </div>
 
         <!-- ACHIEVEMENTS SCREEN -->
@@ -140,9 +134,7 @@
             
             <p class="settings-desc">Complete challenges to earn badges!</p>
             
-            <div id="achievements-list" class="achievements-container">
-                <!-- Populated by JS -->
-            </div>
+            <div id="achievements-list" class="achievements-container"></div>
         </div>
 
         <!-- SHOP SCREEN -->
@@ -187,10 +179,9 @@
                     <span class="slider"></span>
                 </label>
             </div>
-            <div class="settings-row" style="opacity: 0.5;">
-                <span>Music</span>
-                <span style="font-size:12px;">(Coming Later)</span>
-            </div>
+
+            <h3 class="settings-section-title" style="margin-top: 30px;">Account</h3>
+            <button id="btn-logout" class="btn-secondary sound-btn" style="color: #EF4444; border: 2px solid #EF4444; background: transparent;">🚪 LOGOUT</button>
         </div>
 
         <!-- LEVEL SELECTION SCREEN -->
@@ -202,7 +193,7 @@
                 <h2 class="page-title">Select Level</h2>
             </div>
             
-            <p class="level-desc">Higher levels unlock more time, but the target gets smaller!</p>
+            <p class="level-desc">Unlock 100 unique levels! The target gets smaller every level.</p>
 
             <div id="level-list" class="level-list"></div>
             
@@ -276,7 +267,7 @@
         </div>
     </div>
 
-    <!-- IMPORTANT: Changed to type="module" to use real Firebase imports -->
+    <!-- Firebase SDK Imports -->
     <script type="module" src="script.js"></script>
 </body>
 </html>
