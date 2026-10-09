@@ -5,9 +5,8 @@ import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signO
 
 // YOUR FIREBASE CONFIG
 const firebaseConfig = {
-  apiKey: "AIzaSyBRGUWoYPqmVmqvpNQB5lyqCnq5XuwaO30",
+  apiKey: "AIzaSyBRGUWoYPQmVqvpNQB5lyqCnq5XuwaO30",
   authDomain: "my-admin-ce787.firebaseapp.com",
-  databaseURL: "https://my-admin-ce787-default-rtdb.firebaseio.com",
   projectId: "my-admin-ce787",
   storageBucket: "my-admin-ce787.firebasestorage.app",
   messagingSenderId: "228163101396",
@@ -188,55 +187,60 @@ let currentLevelId = 1; let currentLevelConfig = null;
 let currentLevelScore = 0; let totalSessionScore = 0; 
 let timeLeft = 0; let gameInterval; let countdownInterval; let isPlaying = false;
 
-// --- INITIALIZATION ---
+// --- INITIALIZATION (WITH SMART TIMEOUT FIX) ---
 function init() {
     populateCountries(); 
     loadProfile();
     
-    onAuthStateChanged(auth, async (user) => {
+    onAuthStateChanged(auth, (user) => {
         if (user) {
             playerProfile.id = user.uid;
             playerProfile.name = user.displayName ? user.displayName.split(' ')[0] : 'Player';
             
-            loginLoading.style.display = 'block';
-            btnLoginGoogle.style.display = 'none';
+            // SMART TIMEOUT: Jo database 3 sec ma respond na kare, to automatically game chalu kari do
+            let isLoaded = false;
+            const forceStartTimer = setTimeout(() => {
+                if (!isLoaded) {
+                    console.log("Database timeout! Auto-skipping to game...");
+                    loginLoading.style.display = 'none';
+                    applySettings();
+                    updateHomeUI();
+                    showScreen(screenHome);
+                }
+            }, 3000); // 3 second ni limit
 
             try {
-                // Try to read from Firestore
                 const docRef = doc(db, "players", user.uid);
-                const docSnap = await getDoc(docRef);
-                
-                if (docSnap.exists()) {
-                    // Profile exists in cloud
-                    playerProfile = { ...playerProfile, ...docSnap.data() };
-                    
-                    // Safety defaults
-                    if(!playerProfile.unlockedColors) playerProfile.unlockedColors = ['Red', 'Blue', 'Green'];
-                    if(!playerProfile.unlockedShapes) playerProfile.unlockedShapes = ['Circle', 'Square'];
-                    if(!playerProfile.targetShape) playerProfile.targetShape = 'Circle';
-                    if(!playerProfile.unlockedAchievements) playerProfile.unlockedAchievements = [];
-                    if(playerProfile.soundEnabled === undefined) playerProfile.soundEnabled = true;
-                    if(!playerProfile.unlockedLevel) playerProfile.unlockedLevel = 1;
-                    
-                    toggleSound.checked = playerProfile.soundEnabled;
-                    applySettings(); 
-                    updateHomeUI(); 
-                    showScreen(screenHome);
-                } else {
-                    // Brand new user
-                    showScreen(screenGender);
-                }
+                getDoc(docRef).then((docSnap) => {
+                    isLoaded = true;
+                    clearTimeout(forceStartTimer);
+
+                    if (docSnap.exists()) {
+                        playerProfile = { ...playerProfile, ...docSnap.data() };
+                        
+                        // Defaults
+                        if(!playerProfile.unlockedColors) playerProfile.unlockedColors = ['Red', 'Blue', 'Green'];
+                        if(!playerProfile.unlockedShapes) playerProfile.unlockedShapes = ['Circle', 'Square'];
+                        if(!playerProfile.targetShape) playerProfile.targetShape = 'Circle';
+                        if(!playerProfile.unlockedAchievements) playerProfile.unlockedAchievements = [];
+                        if(playerProfile.soundEnabled === undefined) playerProfile.soundEnabled = true;
+                        if(!playerProfile.unlockedLevel) playerProfile.unlockedLevel = 1;
+                        
+                        toggleSound.checked = playerProfile.soundEnabled;
+                        applySettings(); updateHomeUI(); showScreen(screenHome);
+                    } else {
+                        showScreen(screenGender); 
+                    }
+                }).catch((e) => {
+                    isLoaded = true;
+                    clearTimeout(forceStartTimer);
+                    console.error("Firestore read error, skipping...", e);
+                    applySettings(); updateHomeUI(); showScreen(screenHome);
+                });
             } catch(e) {
-                // FIREBASE DATABASE ERROR FALLBACK
-                console.error("Database connection failed. Falling back to local profile.", e);
-                // Database fail thay to pan game atke nai
-                if(playerProfile.country) {
-                   applySettings(); 
-                   updateHomeUI(); 
-                   showScreen(screenHome); 
-                } else {
-                   showScreen(screenGender); 
-                }
+                isLoaded = true;
+                clearTimeout(forceStartTimer);
+                applySettings(); updateHomeUI(); showScreen(screenHome);
             }
         } else {
             loginLoading.style.display = 'none';
@@ -258,19 +262,15 @@ btnLoginGoogle.addEventListener('click', async () => {
         await signInWithPopup(auth, provider);
     } catch (error) {
         console.error("Auth Error", error);
-        alert("Google Login Failed: " + error.message);
+        alert("Google Login Failed. Try again.");
         loginLoading.style.display = 'none';
         btnLoginGoogle.style.display = 'flex';
     }
 });
 
-// Check redirect result when page reloads after login
-getRedirectResult(auth).then((result) => {
-    if (result && result.user) {
-        console.log("Redirect login successful!", result.user.displayName);
-    }
-}).catch((error) => {
-    console.error("Redirect Result Error:", error);
+btnLogout.addEventListener('click', async () => {
+    await signOut(auth);
+    location.reload();
 });
 
 // --- FIREBASE SYNC ---
