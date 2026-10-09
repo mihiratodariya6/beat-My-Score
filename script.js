@@ -5,7 +5,7 @@ import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onA
 
 // YOUR EXACT FIREBASE CONFIG
 const firebaseConfig = {
-  apiKey: "AIzaSyBRGUWoYPQmVqvpNQB5lyqCnq5XuwaO30",
+  apiKey: "AIzaSyBRGUWoYPqmVmqvpNQB5lyqCnq5XuwaO30",
   authDomain: "my-admin-ce787.firebaseapp.com",
   databaseURL: "https://my-admin-ce787-default-rtdb.firebaseio.com",
   projectId: "my-admin-ce787",
