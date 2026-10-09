@@ -1,12 +1,11 @@
 // --- FIREBASE CONFIG & IMPORTS ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-// Ahiya signInWithRedirect proper import karelu chhe
-import { getAuth, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-// YOUR FIREBASE CONFIG
+// YOUR EXACT FIREBASE CONFIG
 const firebaseConfig = {
-  apiKey: "AIzaSyBRGUWoYPqmVmqvpNQB5lyqCnq5XuwaO30",
+  apiKey: "AIzaSyBRGUWoYPQmVqvpNQB5lyqCnq5XuwaO30",
   authDomain: "my-admin-ce787.firebaseapp.com",
   databaseURL: "https://my-admin-ce787-default-rtdb.firebaseio.com",
   projectId: "my-admin-ce787",
@@ -29,6 +28,7 @@ if ('serviceWorker' in navigator) {
 // --- DOM ELEMENTS ---
 const screens = document.querySelectorAll('.screen');
 const screenStart = document.getElementById('screen-start');
+const screenName = document.getElementById('screen-name'); 
 const screenGender = document.getElementById('screen-gender');
 const screenCountry = document.getElementById('screen-country');
 const screenAge = document.getElementById('screen-age');
@@ -44,6 +44,10 @@ const screenResult = document.getElementById('screen-result');
 
 const btnLoginGoogle = document.getElementById('btn-login-google');
 const loginLoading = document.getElementById('login-loading');
+
+const inputUsername = document.getElementById('input-username'); 
+const btnNextName = document.getElementById('btn-next-name'); 
+const usernameError = document.getElementById('username-error'); 
 
 const btnGenders = document.querySelectorAll('.btn-gender');
 const btnNextGender = document.getElementById('btn-next-gender');
@@ -110,7 +114,7 @@ const btnRestart = document.getElementById('btn-restart');
 
 // --- APP STATE ---
 let playerProfile = {
-    id: null, name: '', gender: '', country: '', age: '',
+    id: null, name: '', gender: '', country: '', age: '', email: '',
     bestScore: 0, totalScore: 0, lastScore: 0, gamesPlayed: 0, coins: 0,
     unlockedLevel: 1, targetColor: 'Red', targetShape: 'Circle',
     unlockedColors: ['Red', 'Blue', 'Green'],
@@ -189,58 +193,59 @@ let currentLevelId = 1; let currentLevelConfig = null;
 let currentLevelScore = 0; let totalSessionScore = 0; 
 let timeLeft = 0; let gameInterval; let countdownInterval; let isPlaying = false;
 
-// --- INITIALIZATION ---
+// --- INITIALIZATION (MULTI-ACCOUNT LOGIC) ---
 function init() {
     populateCountries(); 
-    loadProfile();
     
-    onAuthStateChanged(auth, (user) => {
+    // Catch Redirect Result Early
+    getRedirectResult(auth).catch((error) => {
+        console.error("Redirect Error:", error);
+    });
+
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
-            playerProfile.id = user.uid;
-            playerProfile.name = user.displayName ? user.displayName.split(' ')[0] : 'Player';
+            // Force clear local storage to prevent mixing accounts
+            localStorage.removeItem('beatMyScoreProfile');
             
-            let isLoaded = false;
-            const forceStartTimer = setTimeout(() => {
-                if (!isLoaded) {
-                    console.log("Database timeout! Auto-skipping to game...");
-                    loginLoading.style.display = 'none';
-                    applySettings();
-                    updateHomeUI();
-                    showScreen(screenHome);
-                }
-            }, 3000);
+            playerProfile.id = user.uid;
+            playerProfile.email = user.email || '';
+            
+            loginLoading.style.display = 'block';
+            btnLoginGoogle.style.display = 'none';
 
             try {
+                // ALWAYS load fresh from Firebase Cloud
                 const docRef = doc(db, "players", user.uid);
-                getDoc(docRef).then((docSnap) => {
-                    isLoaded = true;
-                    clearTimeout(forceStartTimer);
-
-                    if (docSnap.exists()) {
-                        playerProfile = { ...playerProfile, ...docSnap.data() };
-                        
-                        if(!playerProfile.unlockedColors) playerProfile.unlockedColors = ['Red', 'Blue', 'Green'];
-                        if(!playerProfile.unlockedShapes) playerProfile.unlockedShapes = ['Circle', 'Square'];
-                        if(!playerProfile.targetShape) playerProfile.targetShape = 'Circle';
-                        if(!playerProfile.unlockedAchievements) playerProfile.unlockedAchievements = [];
-                        if(playerProfile.soundEnabled === undefined) playerProfile.soundEnabled = true;
-                        if(!playerProfile.unlockedLevel) playerProfile.unlockedLevel = 1;
-                        
-                        toggleSound.checked = playerProfile.soundEnabled;
-                        applySettings(); updateHomeUI(); showScreen(screenHome);
-                    } else {
-                        showScreen(screenGender); 
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    // OLD USER -> Load Data & Go to Dashboard
+                    playerProfile = { ...playerProfile, ...docSnap.data() };
+                    
+                    if(!playerProfile.unlockedColors) playerProfile.unlockedColors = ['Red', 'Blue', 'Green'];
+                    if(!playerProfile.unlockedShapes) playerProfile.unlockedShapes = ['Circle', 'Square'];
+                    if(!playerProfile.targetShape) playerProfile.targetShape = 'Circle';
+                    if(!playerProfile.unlockedAchievements) playerProfile.unlockedAchievements = [];
+                    if(playerProfile.soundEnabled === undefined) playerProfile.soundEnabled = true;
+                    if(!playerProfile.unlockedLevel) playerProfile.unlockedLevel = 1;
+                    
+                    toggleSound.checked = playerProfile.soundEnabled;
+                    applySettings(); 
+                    updateHomeUI(); 
+                    showScreen(screenHome); // DIRECT TO HOME
+                } else {
+                    // NEW USER -> Ask Name, Gender, Country, Age
+                    if (user.displayName) {
+                        inputUsername.value = user.displayName.split(' ')[0].replace(/[^a-zA-Z0-9]/g, '');
+                        btnNextName.disabled = false;
+                        btnNextName.classList.remove('btn-disabled');
                     }
-                }).catch((e) => {
-                    isLoaded = true;
-                    clearTimeout(forceStartTimer);
-                    console.error("Firestore read error, skipping...", e);
-                    applySettings(); updateHomeUI(); showScreen(screenHome);
-                });
+                    showScreen(screenName); 
+                }
             } catch(e) {
-                isLoaded = true;
-                clearTimeout(forceStartTimer);
-                applySettings(); updateHomeUI(); showScreen(screenHome);
+                console.error("Firestore Error", e);
+                alert("Database Connection Failed. Please try again.");
+                loginLoading.innerText = "Connection Failed. Refresh Page.";
             }
         } else {
             loginLoading.style.display = 'none';
@@ -254,15 +259,14 @@ function showScreen(screenElement) { screens.forEach(s => s.classList.remove('ac
 function formatNumber(num) { return Number(num).toLocaleString('en-IN'); }
 function populateCountries() { worldCountries.forEach(c => { let opt = document.createElement('option'); opt.value = c; opt.innerText = c; selectCountry.appendChild(opt); }); }
 
-// LOGIN ACTION (CHANGED TO REDIRECT)
+// LOGIN ACTION (Redirect for PC & Mobile Compatibility)
 btnLoginGoogle.addEventListener('click', () => {
     loginLoading.style.display = 'block';
     btnLoginGoogle.style.display = 'none';
     
-    // Redirect bypasses all popup blockers
     signInWithRedirect(auth, provider).catch((error) => {
         console.error("Auth Error", error);
-        alert("Error: " + error.message);
+        alert("Login Error: " + error.message);
         loginLoading.style.display = 'none';
         btnLoginGoogle.style.display = 'flex';
     });
@@ -270,7 +274,8 @@ btnLoginGoogle.addEventListener('click', () => {
 
 btnLogout.addEventListener('click', async () => {
     await signOut(auth);
-    location.reload();
+    // Refresh page fully to ensure clean state for next user
+    window.location.reload(true);
 });
 
 // --- FIREBASE SYNC ---
@@ -282,6 +287,7 @@ async function syncToFirebase() {
             gender: playerProfile.gender,
             country: playerProfile.country,
             age: playerProfile.age,
+            email: playerProfile.email,
             bestScore: playerProfile.bestScore,
             totalScore: playerProfile.totalScore,
             gamesPlayed: playerProfile.gamesPlayed,
@@ -316,22 +322,92 @@ function applySettings() {
     }
 }
 
-// --- ONBOARDING ---
-btnGenders.forEach(btn => { btn.addEventListener('click', () => { btnGenders.forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); playerProfile.gender = btn.getAttribute('data-gender'); btnNextGender.disabled = false; btnNextGender.classList.remove('btn-disabled'); }); });
-btnNextGender.addEventListener('click', () => { showScreen(screenCountry); });
-selectCountry.addEventListener('change', () => { btnNextCountry.disabled = selectCountry.value === ""; btnNextCountry.classList.toggle('btn-disabled', btnNextCountry.disabled); });
-btnNextCountry.addEventListener('click', () => { playerProfile.country = selectCountry.value; showScreen(screenAge); });
-btnAges.forEach(btn => { btn.addEventListener('click', () => { btnAges.forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); playerProfile.age = btn.getAttribute('data-age'); btnFinishOnboarding.disabled = false; btnFinishOnboarding.classList.remove('btn-disabled'); }); });
-btnFinishOnboarding.addEventListener('click', async () => {
-    playerProfile.unlockedLevel = 1; playerProfile.targetColor = 'Red'; playerProfile.targetShape = 'Circle'; playerProfile.coins = 0; playerProfile.unlockedAchievements = [];
-    playerProfile.unlockedColors = ['Red', 'Blue', 'Green']; playerProfile.unlockedShapes = ['Circle', 'Square']; playerProfile.soundEnabled = true;
-    
-    applySettings(); updateHomeUI(); showScreen(screenHome);
-    await syncToFirebase(); 
+// --- ONBOARDING LOGIC ---
+
+inputUsername.addEventListener('input', () => { 
+    btnNextName.disabled = inputUsername.value.trim().length < 3; 
+    btnNextName.classList.toggle('btn-disabled', btnNextName.disabled); 
+    usernameError.style.display = 'none';
 });
 
-function loadProfile() { const saved = localStorage.getItem('beatMyScoreProfile'); if (saved) playerProfile = { ...playerProfile, ...JSON.parse(saved) }; }
-function saveProfile() { localStorage.setItem('beatMyScoreProfile', JSON.stringify(playerProfile)); }
+btnNextName.addEventListener('click', async () => { 
+    const requestedName = inputUsername.value.trim();
+    btnNextName.innerText = "Checking...";
+    btnNextName.disabled = true;
+    
+    try {
+        const nameRef = doc(db, "usernames", requestedName.toLowerCase());
+        const nameSnap = await getDoc(nameRef);
+        
+        if (nameSnap.exists()) {
+            usernameError.style.display = 'block';
+            btnNextName.innerText = "CHECK & NEXT";
+            btnNextName.disabled = false;
+        } else {
+            await setDoc(nameRef, { uid: playerProfile.id });
+            playerProfile.name = requestedName;
+            showScreen(screenGender);
+        }
+    } catch(e) {
+        console.error("Username check failed", e);
+        playerProfile.name = requestedName;
+        showScreen(screenGender);
+    }
+});
+
+btnGenders.forEach(btn => { 
+    btn.addEventListener('click', () => { 
+        btnGenders.forEach(b => b.classList.remove('selected')); 
+        btn.classList.add('selected'); 
+        playerProfile.gender = btn.getAttribute('data-gender'); 
+        btnNextGender.disabled = false; 
+        btnNextGender.classList.remove('btn-disabled'); 
+    }); 
+});
+btnNextGender.addEventListener('click', () => { showScreen(screenCountry); });
+
+selectCountry.addEventListener('change', () => { 
+    btnNextCountry.disabled = selectCountry.value === ""; 
+    btnNextCountry.classList.toggle('btn-disabled', btnNextCountry.disabled); 
+});
+btnNextCountry.addEventListener('click', () => { 
+    playerProfile.country = selectCountry.value; 
+    showScreen(screenAge); 
+});
+
+btnAges.forEach(btn => { 
+    btn.addEventListener('click', () => { 
+        btnAges.forEach(b => b.classList.remove('selected')); 
+        btn.classList.add('selected'); 
+        playerProfile.age = btn.getAttribute('data-age'); 
+        btnFinishOnboarding.disabled = false; 
+        btnFinishOnboarding.classList.remove('btn-disabled'); 
+    }); 
+});
+
+btnFinishOnboarding.addEventListener('click', async () => {
+    btnFinishOnboarding.innerText = "SAVING...";
+    btnFinishOnboarding.disabled = true;
+    
+    playerProfile.unlockedLevel = 1; 
+    playerProfile.targetColor = 'Red'; 
+    playerProfile.targetShape = 'Circle'; 
+    playerProfile.coins = 0; 
+    playerProfile.bestScore = 0;
+    playerProfile.totalScore = 0;
+    playerProfile.gamesPlayed = 0;
+    playerProfile.unlockedAchievements = [];
+    playerProfile.unlockedColors = ['Red', 'Blue', 'Green']; 
+    playerProfile.unlockedShapes = ['Circle', 'Square']; 
+    playerProfile.soundEnabled = true;
+    
+    applySettings(); 
+    updateHomeUI(); 
+    
+    await syncToFirebase(); 
+    
+    showScreen(screenHome);
+});
 
 // --- HOME LOGIC ---
 function updateHomeUI() {
