@@ -239,39 +239,29 @@ function showScreen(screenElement) { screens.forEach(s => s.classList.remove('ac
 function formatNumber(num) { return Number(num).toLocaleString('en-IN'); }
 function populateCountries() { worldCountries.forEach(c => { let opt = document.createElement('option'); opt.value = c; opt.innerText = c; selectCountry.appendChild(opt); }); }
 
-// LOGIN ACTION
+// LOGIN ACTION (USING REDIRECT INSTEAD OF POPUP)
 btnLoginGoogle.addEventListener('click', async () => {
     loginLoading.style.display = 'block';
     btnLoginGoogle.style.display = 'none';
     
-    // Clear old errors before trying again
-    localStorage.removeItem('firebase:previous_websocket_failure');
-    
     try {
-        // Fix mate custom parameter pass karya jethi prompt aave
-        provider.setCustomParameters({
-            prompt: 'select_account'
-        });
-        
-        const result = await signInWithPopup(auth, provider);
-        console.log("Logged in successfully!", result.user.displayName);
-        // Page aagal automatically onAuthStateChanged thi chali jashe
-        
+        // signInWithRedirect bypasses browser popup blockers entirely
+        await signInWithRedirect(auth, provider);
     } catch (error) {
-        console.error("Full Auth Error:", error);
-        
-        // Jo popup block thay to warning aapo
-        if (error.code === 'auth/popup-blocked') {
-            alert("POP-UP BLOCKED! Tamare browser ma pop-up allow karva padse (Address bar ma jamani baaju red icon par click karo).");
-        } else if (error.code === 'auth/popup-closed-by-user') {
-            // User e jate close karyu
-        } else {
-            alert("Error code: " + error.code + "\nMessage: " + error.message);
-        }
-        
+        console.error("Auth Error", error);
+        alert("Login Error: " + error.message);
         loginLoading.style.display = 'none';
         btnLoginGoogle.style.display = 'flex';
     }
+});
+
+// Check redirect result when page reloads after login
+getRedirectResult(auth).then((result) => {
+    if (result && result.user) {
+        console.log("Redirect login successful!", result.user.displayName);
+    }
+}).catch((error) => {
+    console.error("Redirect Result Error:", error);
 });
 
 // --- FIREBASE SYNC ---
