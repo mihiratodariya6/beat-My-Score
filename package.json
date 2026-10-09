@@ -1,0 +1,26 @@
+{
+  "name": "beat-my-score",
+  "version": "1.0.0",
+  "description": "A mobile-first, highly addictive browser game where speed and precision matter.",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mihiratodariya6/beat-My-Score.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/mihiratodariya6/beat-My-Score/issues"
+  },
+  "homepage": "https://github.com/mihiratodariya6/beat-My-Score#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3"
+  }
+}
