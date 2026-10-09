@@ -1,8 +1,7 @@
 // --- FIREBASE CONFIG & IMPORTS ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-// Changed to signInWithRedirect and getRedirectResult
-import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 // YOUR FIREBASE CONFIG
 const firebaseConfig = {
@@ -193,18 +192,45 @@ let gameInterval; let countdownInterval; let isPlaying = false;
 
 // --- INITIALIZATION ---
 function init() {
-    populateCountries(); loadProfile();
+    populateCountries(); 
+    loadProfile();
     
-    // Check Redirect Result immediately
-    getRedirectResult(auth).then((result) => {
-        if (result && result.user) {
-            // Handled by onAuthStateChanged
+    // Check Auth State
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            playerProfile.id = user.uid;
+            playerProfile.name = user.displayName ? user.displayName.split(' ')[0] : 'Player';
+            
+            loginLoading.style.display = 'block';
+            btnLoginGoogle.style.display = 'none';
+
+            try {
+                const docRef = doc(db, "players", user.uid);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    playerProfile = { ...playerProfile, ...docSnap.data() };
+                    
+                    if(!playerProfile.unlockedColors) playerProfile.unlockedColors = ['Red', 'Blue', 'Green'];
+                    if(!playerProfile.unlockedShapes) playerProfile.unlockedShapes = ['Circle', 'Square'];
+                    if(!playerProfile.targetShape) playerProfile.targetShape = 'Circle';
+                    if(!playerProfile.unlockedAchievements) playerProfile.unlockedAchievements = [];
+                    if(playerProfile.soundEnabled === undefined) playerProfile.soundEnabled = true;
+                    
+                    toggleSound.checked = playerProfile.soundEnabled;
+                    applySettings(); updateHomeUI(); showScreen(screenHome);
+                } else {
+                    showScreen(screenGender);
+                }
+            } catch(e) {
+                console.error("Error fetching profile", e);
+                alert("Could not load profile. Check console.");
+            }
+        } else {
+            loginLoading.style.display = 'none';
+            btnLoginGoogle.style.display = 'flex';
+            showScreen(screenStart);
         }
-    }).catch((error) => {
-        console.error("Redirect Auth Error", error);
-        alert("Google Login error: " + error.message);
-        loginLoading.style.display = 'none';
-        btnLoginGoogle.style.display = 'flex';
     });
 }
 
@@ -212,56 +238,19 @@ function showScreen(screenElement) { screens.forEach(s => s.classList.remove('ac
 function formatNumber(num) { return Number(num).toLocaleString('en-IN'); }
 function populateCountries() { worldCountries.forEach(c => { let opt = document.createElement('option'); opt.value = c; opt.innerText = c; selectCountry.appendChild(opt); }); }
 
-populateCountries();
-
-// Handle Auth State Change
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        playerProfile.id = user.uid;
-        playerProfile.name = user.displayName ? user.displayName.split(' ')[0] : 'Player';
-        
-        loginLoading.style.display = 'block';
-        btnLoginGoogle.style.display = 'none';
-
-        try {
-            const docRef = doc(db, "players", user.uid);
-            const docSnap = await getDoc(docRef);
-            
-            if (docSnap.exists()) {
-                playerProfile = { ...playerProfile, ...docSnap.data() };
-                
-                if(!playerProfile.unlockedColors) playerProfile.unlockedColors = ['Red', 'Blue', 'Green'];
-                if(!playerProfile.unlockedShapes) playerProfile.unlockedShapes = ['Circle', 'Square'];
-                if(!playerProfile.targetShape) playerProfile.targetShape = 'Circle';
-                if(!playerProfile.unlockedAchievements) playerProfile.unlockedAchievements = [];
-                if(playerProfile.soundEnabled === undefined) playerProfile.soundEnabled = true;
-                
-                toggleSound.checked = playerProfile.soundEnabled;
-                applySettings(); updateHomeUI(); showScreen(screenHome);
-            } else {
-                showScreen(screenGender);
-            }
-        } catch(e) {
-            console.error("Error fetching profile", e);
-            alert("Could not load profile. Check console.");
-        }
-    } else {
-        loginLoading.style.display = 'none';
-        btnLoginGoogle.style.display = 'flex';
-        showScreen(screenStart);
-    }
-});
-
-// Changed to signInWithRedirect to fix GitHub Codespaces Popup blocker issue
-btnLoginGoogle.addEventListener('click', () => {
+// CHANGED TO POPUP LOGIN FOR CODESPACES COMPATIBILITY
+btnLoginGoogle.addEventListener('click', async () => {
     loginLoading.style.display = 'block';
     btnLoginGoogle.style.display = 'none';
-    signInWithRedirect(auth, provider).catch(error => {
+    
+    try {
+        await signInWithPopup(auth, provider);
+    } catch (error) {
         console.error("Auth Error", error);
-        alert("Google Login Failed.");
+        alert("Google Login Failed. Try again or check popup blocker.");
         loginLoading.style.display = 'none';
         btnLoginGoogle.style.display = 'flex';
-    });
+    }
 });
 
 btnLogout.addEventListener('click', async () => {
@@ -310,6 +299,9 @@ function applySettings() {
         target.style.transform = 'none'; target.onmousedown = null; target.onmouseup = null;
     }
 }
+
+function loadProfile() { const saved = localStorage.getItem('beatMyScoreProfile'); if (saved) playerProfile = { ...playerProfile, ...JSON.parse(saved) }; }
+function saveProfile() { localStorage.setItem('beatMyScoreProfile', JSON.stringify(playerProfile)); }
 
 // --- ONBOARDING CONTINUED ---
 btnGenders.forEach(btn => { btn.addEventListener('click', () => { btnGenders.forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); playerProfile.gender = btn.getAttribute('data-gender'); btnNextGender.disabled = false; btnNextGender.classList.remove('btn-disabled'); }); });
@@ -573,5 +565,4 @@ function endGame() {
 
 btnResultHome.addEventListener('click', () => { updateHomeUI(); showScreen(screenHome); });
 
-// Initialize app check
 init();
