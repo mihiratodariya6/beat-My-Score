@@ -75,8 +75,8 @@ const uiProgress = document.getElementById('ui-progress');
 const playArea = document.getElementById('play-area');
 const target = document.getElementById('target');
 
+// FIX: 'resultLevel' kadhi nakhyu chhe jethi crash na thay
 const resultTitle = document.getElementById('result-title');
-const resultLevel = document.getElementById('result-level');
 const resultScore = document.getElementById('result-score');
 const resultCoins = document.getElementById('result-coins');
 const resultTotalScore = document.getElementById('result-total-score');
@@ -103,7 +103,6 @@ let playerProfile = {
 };
 
 const sfx = {
-    // Navo Pop/Water Splash sound jethi ramanvani maja aave
     splash: new Audio("data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YTAAAACAAf8M/xb/Ff8S/xL/FP8Y/x7/JP8p/y7/NP84/zz/P/9B/0X/SP9L/07/UP9S/w=="),
     click: new Audio("data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAAAACA/v/3/+//5//j/+b/4v/b/87/x//E/8f/wf+w/5X/c/9K/yH/9v7f/r7+lv5w/kz+Mv4S/vb93f25/Zn9c/1Q/Tb9Hf0J/fj83/y4/Jr8jPxs/FT8I/z1+9b7rvuV+2H7Kvv7+t/6nPpG+v757Pk="),
     over: new Audio("data:audio/wav;base64,UklGRq4AAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YIgAAACA/v/0/9X/p/92/zn/+v7Q/pr+Xv4W/db8gvws/Nb7ifsz+/r6x/qU+l76IPr4+cL5jvlB+fv4wPiO+E/4Evjp98v3uvfL99X30vfb9+r3/fcO+Cb4Qvh++KT41Pj5+Bn5Qfl0+ab51Pn7+R/6R/p0+pr6yPoS+zj7aPuY+8n75fsW/D38aPyY/MD86vwn/Wf9jv24/eD9CP4j/jr+Pf4="),
@@ -267,7 +266,6 @@ function applySettings() {
     document.documentElement.style.setProperty('--target-shape', shapeObj.css);
     document.documentElement.style.setProperty('--target-clip-path', shapeObj.clipPath || 'none');
     
-    // We removed standard down/up transforms here because we handle it dynamically on click now
     target.style.transform = 'none'; 
     target.onmousedown = null; 
     target.onmouseup = null;
@@ -470,8 +468,7 @@ btnRestart.addEventListener('click', () => {
     startGetReadyPhase();
 });
 
-
-// THE NEW MAGIC TARGET HIT FUNCTION (SPLASH + JELLY)
+// TARGET HIT LOGIC (SPLASH & JELLY ANIMATION)
 target.addEventListener('pointerdown', handleTargetHit);
 
 function handleTargetHit(e) { 
@@ -479,22 +476,21 @@ function handleTargetHit(e) {
     e.preventDefault(); 
     
     currentLevelScore++; 
-    
     uiScore.innerText = currentLevelScore; 
     
     let progressPercent = (currentLevelScore / currentLevelConfig.targetScore) * 100;
     if (progressPercent > 100) progressPercent = 100;
     uiProgress.style.width = `${progressPercent}%`;
 
-    // 1. Splash Sound
+    // 1. Play Splash Sound
     playSound('splash'); 
 
-    // 2. Jelly Animation Trick
+    // 2. Jelly Animation
     target.classList.remove('jelly-anim');
     void target.offsetWidth; 
     target.classList.add('jelly-anim');
 
-    // 3. Create Particles (Pichkari)
+    // 3. Pichkari Particles
     const rect = target.getBoundingClientRect();
     const clickX = e.clientX || (rect.left + rect.width / 2);
     const clickY = e.clientY || (rect.top + rect.height / 2);
@@ -502,14 +498,12 @@ function handleTargetHit(e) {
     
     createSplashEffect(clickX, clickY, currentColor);
 
-    // 4. Move target
+    // 4. Move Target
     moveTarget(); 
 }
 
-// THE PARTICLE GENERATOR
 function createSplashEffect(x, y, color) {
     const particleCount = 10;
-    
     for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
         particle.classList.add('particle');
@@ -537,7 +531,6 @@ function createSplashEffect(x, y, color) {
         }, 500);
     }
 }
-
 
 function startGame() {
     currentLevelScore = 0; 
@@ -628,14 +621,14 @@ function endGame(isSuccess) {
 
     const newAchievements = checkAchievements();
     
-    saveProfile(); 
-    playSound('over');
-
-    resultLevel.innerText = playerProfile.currentPlayingLevel;
+    // FIX APPLIED HERE: resultLevel mathi nikalelu chhe
     resultScore.innerText = currentLevelScore;
     resultTotalScore.innerText = playerProfile.totalScore;
     resultCoins.innerText = formatNumber(coinsEarned);
     resultNextLevel.innerText = playerProfile.currentPlayingLevel;
+
+    saveProfile(); 
+    playSound('over');
 
     if(newAchievements.length > 0) {
         achievementToastName.innerText = newAchievements[0].title;
