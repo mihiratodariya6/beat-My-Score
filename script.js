@@ -1,7 +1,8 @@
 // --- FIREBASE CONFIG & IMPORTS ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, getDocs, collection, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+// Changed to signInWithRedirect and getRedirectResult
+import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 // YOUR FIREBASE CONFIG
 const firebaseConfig = {
@@ -174,14 +175,13 @@ const SHOP_SHAPES = [
     { name: 'Ninja', css: '0', clipPath: 'polygon(50% 0%, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0% 50%, 40% 40%)', cost: 100000 }
 ];
 
-// --- 100 INFINITE LEVELS GENERATION ---
 const LEVELS = [];
 for (let i = 1; i <= 100; i++) {
     LEVELS.push({
         id: i,
-        time: Math.min(60, 25 + (i * 5)), // Cap at 60s
-        size: Math.max(20, 85 - (i * 5)), // Shrinks to 20px
-        unlockReq: (i - 1) * 30 // E.g., Level 2 = 30 score, Level 3 = 60...
+        time: Math.min(60, 25 + (i * 5)), 
+        size: Math.max(20, 85 - (i * 5)), 
+        unlockReq: (i - 1) * 30 
     });
 }
 
@@ -191,7 +191,23 @@ let selectedLevelId = 1; let currentLevelConfig = null;
 let score = 0; let combo = 0; let maxCombo = 0; let timeLeft = 0;
 let gameInterval; let countdownInterval; let isPlaying = false;
 
-// --- AUTH & INITIALIZATION ---
+// --- INITIALIZATION ---
+function init() {
+    populateCountries(); loadProfile();
+    
+    // Check Redirect Result immediately
+    getRedirectResult(auth).then((result) => {
+        if (result && result.user) {
+            // Handled by onAuthStateChanged
+        }
+    }).catch((error) => {
+        console.error("Redirect Auth Error", error);
+        alert("Google Login error: " + error.message);
+        loginLoading.style.display = 'none';
+        btnLoginGoogle.style.display = 'flex';
+    });
+}
+
 function showScreen(screenElement) { screens.forEach(s => s.classList.remove('active')); screenElement.classList.add('active'); }
 function formatNumber(num) { return Number(num).toLocaleString('en-IN'); }
 function populateCountries() { worldCountries.forEach(c => { let opt = document.createElement('option'); opt.value = c; opt.innerText = c; selectCountry.appendChild(opt); }); }
@@ -202,7 +218,6 @@ populateCountries();
 onAuthStateChanged(auth, async (user) => {
     if (user) {
         playerProfile.id = user.uid;
-        // Split name to keep it short if needed, or use full name
         playerProfile.name = user.displayName ? user.displayName.split(' ')[0] : 'Player';
         
         loginLoading.style.display = 'block';
@@ -213,10 +228,8 @@ onAuthStateChanged(auth, async (user) => {
             const docSnap = await getDoc(docRef);
             
             if (docSnap.exists()) {
-                // Returning user: Load cloud data
                 playerProfile = { ...playerProfile, ...docSnap.data() };
                 
-                // Safety defaults
                 if(!playerProfile.unlockedColors) playerProfile.unlockedColors = ['Red', 'Blue', 'Green'];
                 if(!playerProfile.unlockedShapes) playerProfile.unlockedShapes = ['Circle', 'Square'];
                 if(!playerProfile.targetShape) playerProfile.targetShape = 'Circle';
@@ -226,7 +239,6 @@ onAuthStateChanged(auth, async (user) => {
                 toggleSound.checked = playerProfile.soundEnabled;
                 applySettings(); updateHomeUI(); showScreen(screenHome);
             } else {
-                // New user: Needs onboarding (Gender, Country, Age)
                 showScreen(screenGender);
             }
         } catch(e) {
@@ -240,13 +252,16 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-btnLoginGoogle.addEventListener('click', async () => {
-    try {
-        await signInWithPopup(auth, provider);
-    } catch (error) {
+// Changed to signInWithRedirect to fix GitHub Codespaces Popup blocker issue
+btnLoginGoogle.addEventListener('click', () => {
+    loginLoading.style.display = 'block';
+    btnLoginGoogle.style.display = 'none';
+    signInWithRedirect(auth, provider).catch(error => {
         console.error("Auth Error", error);
-        alert("Google Login Failed. Make sure you added your Codespace URL to Firebase Authorized Domains!");
-    }
+        alert("Google Login Failed.");
+        loginLoading.style.display = 'none';
+        btnLoginGoogle.style.display = 'flex';
+    });
 });
 
 btnLogout.addEventListener('click', async () => {
@@ -307,7 +322,7 @@ btnFinishOnboarding.addEventListener('click', async () => {
     playerProfile.unlockedColors = ['Red', 'Blue', 'Green']; playerProfile.unlockedShapes = ['Circle', 'Square']; playerProfile.soundEnabled = true;
     
     applySettings(); updateHomeUI(); showScreen(screenHome);
-    await syncToFirebase(); // Save initial setup
+    await syncToFirebase(); 
 });
 
 // --- HOME LOGIC ---
@@ -351,7 +366,6 @@ async function renderScoreboard(type) {
             allData = allData.filter(p => p.country === playerProfile.country);
         }
 
-        // Highlight current user
         let playerInList = allData.find(p => p.name === playerProfile.name && p.bestScore === playerProfile.bestScore);
         if (!playerInList && playerProfile.bestScore > 0) {
             allData.push({
@@ -536,7 +550,7 @@ function endGame() {
 
     const newAchievements = checkAchievements();
     
-    syncToFirebase(); // SYNC NEW SCORE TO DATABASE
+    syncToFirebase(); 
     playSound('over');
 
     resultLevel.innerText = `${currentLevelConfig.id} (${currentLevelConfig.time}s)`;
@@ -558,3 +572,6 @@ function endGame() {
 }
 
 btnResultHome.addEventListener('click', () => { updateHomeUI(); showScreen(screenHome); });
+
+// Initialize app check
+init();
