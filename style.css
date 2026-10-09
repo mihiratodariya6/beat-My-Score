@@ -193,3 +193,38 @@ input:checked + .slider:before { transform: translateX(22px); }
 .result-row { display: flex; justify-content: space-between; font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text-main); }
 .result-row:last-child { margin-bottom: 0; }
 .highlight-row { color: var(--primary); font-size: 26px; font-weight: 900; padding: 12px 0; margin: 16px 0; border-bottom: 2px solid rgba(0,0,0,0.05); }
+/* --- JELLY & SPLASH ANIMATIONS --- */
+
+/* Jelly squash effect */
+@keyframes jelly-squash {
+    0% { transform: scale(1); }
+    25% { transform: scale(0.8, 1.2); }
+    50% { transform: scale(1.15, 0.85); }
+    75% { transform: scale(0.95, 1.05); }
+    100% { transform: scale(1); }
+}
+
+.jelly-anim {
+    animation: jelly-squash 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Flying Particles (Pichkari effect) */
+.particle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 999;
+    opacity: 1;
+    animation: splashAnim 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes splashAnim {
+    0% { 
+        transform: translate(-50%, -50%) scale(1); 
+        opacity: 1; 
+    }
+    100% { 
+        transform: translate(var(--tx), var(--ty)) scale(0); 
+        opacity: 0; 
+    }
+}

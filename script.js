@@ -103,7 +103,8 @@ let playerProfile = {
 };
 
 const sfx = {
-    tap: new Audio("data:audio/wav;base64,UklGRmYBAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUMBAACA/v/7//f/6//e/83/uf+a/3b/UP8o/wD//P72/vL+3/7S/sz+2/7X/s7+rf6P/n7+Vv4y/hT+8/3h/dX95/3V/cz9vf2g/YH9Vv0j/Qj97Pzm/Nz83/zc/Nz8zvyq/IT8Wvw//Bz88fvh++D72vvR+837tPua+3v7YftM+z/7H/v/+9v7nfsS+x/7Tvsj+zj7KPsT+/T66Prh+tX61/rT+rn6m/p++k76Ifre+Z/5Yfkr+eH4tPh2+FL4NPgc+A=="),
+    // Navo Pop/Water Splash sound jethi ramanvani maja aave
+    splash: new Audio("data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YTAAAACAAf8M/xb/Ff8S/xL/FP8Y/x7/JP8p/y7/NP84/zz/P/9B/0X/SP9L/07/UP9S/w=="),
     click: new Audio("data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAAAACA/v/3/+//5//j/+b/4v/b/87/x//E/8f/wf+w/5X/c/9K/yH/9v7f/r7+lv5w/kz+Mv4S/vb93f25/Zn9c/1Q/Tb9Hf0J/fj83/y4/Jr8jPxs/FT8I/z1+9b7rvuV+2H7Kvv7+t/6nPpG+v757Pk="),
     over: new Audio("data:audio/wav;base64,UklGRq4AAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YIgAAACA/v/0/9X/p/92/zn/+v7Q/pr+Xv4W/db8gvws/Nb7ifsz+/r6x/qU+l76IPr4+cL5jvlB+fv4wPiO+E/4Evjp98v3uvfL99X30vfb9+r3/fcO+Cb4Qvh++KT41Pj5+Bn5Qfl0+ab51Pn7+R/6R/p0+pr6yPoS+zj7aPuY+8n75fsW/D38aPyY/MD86vwn/Wf9jv24/eD9CP4j/jr+Pf4="),
     combo: new Audio("data:audio/wav;base64,UklGRhYBAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YeoAAACA/v/2/+//7f/2/wkAIgBFAFcAaAB3AIEAiACTAJoAqAC1AMMA0gDhAOkA7AD5AAcBFwEuAT8BUwFpAXoBhgGPAYsBggF4AWcBWAFFATIBHQEIAdIAewAbAL3+a/4A/qX9LP2/+0b74fqd+mD6Ifro+af5VvkK+ar4Tfjr95f3VPcY9/v28fbe9sL2rPaa9pv2kfaa9pb2rfbB9uP2Cfcj90D3Xfd995r3pve398f33/fn9+v3+fcE+A==")
@@ -266,13 +267,10 @@ function applySettings() {
     document.documentElement.style.setProperty('--target-shape', shapeObj.css);
     document.documentElement.style.setProperty('--target-clip-path', shapeObj.clipPath || 'none');
     
-    if(shapeObj.transform) {
-        target.style.transform = shapeObj.transform;
-        target.onmousedown = () => target.style.transform = `${shapeObj.transform} scale(0.9)`;
-        target.onmouseup = () => target.style.transform = shapeObj.transform;
-    } else {
-        target.style.transform = 'none'; target.onmousedown = null; target.onmouseup = null;
-    }
+    // We removed standard down/up transforms here because we handle it dynamically on click now
+    target.style.transform = 'none'; 
+    target.onmousedown = null; 
+    target.onmouseup = null;
 }
 
 // --- ONBOARDING LOGIC ---
@@ -472,7 +470,74 @@ btnRestart.addEventListener('click', () => {
     startGetReadyPhase();
 });
 
+
+// THE NEW MAGIC TARGET HIT FUNCTION (SPLASH + JELLY)
 target.addEventListener('pointerdown', handleTargetHit);
+
+function handleTargetHit(e) { 
+    if (!isPlaying) return; 
+    e.preventDefault(); 
+    
+    currentLevelScore++; 
+    
+    uiScore.innerText = currentLevelScore; 
+    
+    let progressPercent = (currentLevelScore / currentLevelConfig.targetScore) * 100;
+    if (progressPercent > 100) progressPercent = 100;
+    uiProgress.style.width = `${progressPercent}%`;
+
+    // 1. Splash Sound
+    playSound('splash'); 
+
+    // 2. Jelly Animation Trick
+    target.classList.remove('jelly-anim');
+    void target.offsetWidth; 
+    target.classList.add('jelly-anim');
+
+    // 3. Create Particles (Pichkari)
+    const rect = target.getBoundingClientRect();
+    const clickX = e.clientX || (rect.left + rect.width / 2);
+    const clickY = e.clientY || (rect.top + rect.height / 2);
+    const currentColor = document.documentElement.style.getPropertyValue('--target-color') || '#EF4444';
+    
+    createSplashEffect(clickX, clickY, currentColor);
+
+    // 4. Move target
+    moveTarget(); 
+}
+
+// THE PARTICLE GENERATOR
+function createSplashEffect(x, y, color) {
+    const particleCount = 10;
+    
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+        
+        const size = Math.random() * 12 + 6; 
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.backgroundColor = color;
+        
+        particle.style.left = `${x}px`;
+        particle.style.top = `${y}px`;
+        
+        const angle = Math.random() * Math.PI * 2;
+        const distance = Math.random() * 80 + 40; 
+        const tx = Math.cos(angle) * distance;
+        const ty = Math.sin(angle) * distance;
+        
+        particle.style.setProperty('--tx', `${tx}px`);
+        particle.style.setProperty('--ty', `${ty}px`);
+        
+        document.body.appendChild(particle);
+        
+        setTimeout(() => {
+            particle.remove();
+        }, 500);
+    }
+}
+
 
 function startGame() {
     currentLevelScore = 0; 
@@ -502,22 +567,6 @@ function updateTimer() {
     if (timeLeft <= 0) {
         evaluateLevelResult();
     } 
-}
-
-function handleTargetHit(e) { 
-    if (!isPlaying) return; 
-    e.preventDefault(); 
-    
-    currentLevelScore++; 
-    
-    uiScore.innerText = currentLevelScore; 
-    
-    let progressPercent = (currentLevelScore / currentLevelConfig.targetScore) * 100;
-    if (progressPercent > 100) progressPercent = 100;
-    uiProgress.style.width = `${progressPercent}%`;
-
-    playSound('tap'); 
-    moveTarget(); 
 }
 
 function moveTarget() {
