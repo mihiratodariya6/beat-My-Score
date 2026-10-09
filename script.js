@@ -240,17 +240,15 @@ function showScreen(screenElement) { screens.forEach(s => s.classList.remove('ac
 function formatNumber(num) { return Number(num).toLocaleString('en-IN'); }
 function populateCountries() { worldCountries.forEach(c => { let opt = document.createElement('option'); opt.value = c; opt.innerText = c; selectCountry.appendChild(opt); }); }
 
-// LOGIN ACTION (USING REDIRECT INSTEAD OF POPUP)
+// LOGIN ACTION
 btnLoginGoogle.addEventListener('click', async () => {
     loginLoading.style.display = 'block';
     btnLoginGoogle.style.display = 'none';
-    
     try {
-        // signInWithRedirect bypasses browser popup blockers entirely
-        await signInWithRedirect(auth, provider);
+        await signInWithPopup(auth, provider);
     } catch (error) {
         console.error("Auth Error", error);
-        alert("Login Error: " + error.message);
+        alert("Google Login Failed: " + error.message);
         loginLoading.style.display = 'none';
         btnLoginGoogle.style.display = 'flex';
     }
