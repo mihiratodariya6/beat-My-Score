@@ -101,15 +101,44 @@
 
             <div class="home-actions">
                 <button id="btn-start-game" class="btn-huge sound-btn">▶ TAP TO PLAY</button>
-                <!-- SCOREBOARD ADD KARYU -->
-                <button id="btn-go-scoreboard" class="btn-secondary sound-btn">🏆 SCOREBOARD</button>
-                <button id="btn-go-achievements" class="btn-secondary sound-btn">⭐ ACHIEVEMENTS</button>
-                <button id="btn-go-shop" class="btn-secondary sound-btn" style="background:#F59E0B; color:white;">🛒 ITEM SHOP</button>
-                <button id="btn-go-settings" class="btn-secondary sound-btn">⚙ SETTINGS</button>
+                
+                <!-- NEW DAILY TASKS BUTTON ADDED -->
+                <button id="btn-go-tasks" class="btn-secondary sound-btn" style="background:#10B981; color:white; font-size: 18px; padding: 16px;">📋 DAILY TASKS</button>
+
+                <div style="display: flex; gap: 12px; width: 100%;">
+                    <button id="btn-go-scoreboard" class="btn-secondary sound-btn" style="flex: 1; padding: 12px; font-size: 14px;">🏆 SCOREBOARD</button>
+                    <button id="btn-go-achievements" class="btn-secondary sound-btn" style="flex: 1; padding: 12px; font-size: 14px;">⭐ ACHIEVEMENTS</button>
+                </div>
+                
+                <div style="display: flex; gap: 12px; width: 100%;">
+                    <button id="btn-go-shop" class="btn-secondary sound-btn" style="flex: 1; background:#F59E0B; color:white; padding: 12px; font-size: 14px;">🛒 ITEM SHOP</button>
+                    <button id="btn-go-settings" class="btn-secondary sound-btn" style="flex: 1; padding: 12px; font-size: 14px;">⚙ SETTINGS</button>
+                </div>
             </div>
         </div>
 
-        <!-- SCOREBOARD SCREEN ADD KARYU -->
+        <!-- NEW DAILY TASKS SCREEN ADDED -->
+        <div id="screen-tasks" class="screen">
+            <div class="header-with-back" style="justify-content: space-between;">
+                <div style="display:flex; align-items:center; gap:16px;">
+                    <button id="btn-back-tasks" class="btn-icon sound-btn">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    </button>
+                    <h2 class="page-title">Daily Tasks</h2>
+                </div>
+                <div class="coin-display">
+                    🪙 <span id="tasks-coins">0</span>
+                </div>
+            </div>
+            <p class="settings-desc">Complete these tasks today to earn extra coins!</p>
+            <p id="task-reset-timer" style="font-size: 12px; color: #EF4444; text-align: center; margin-top: -10px; font-weight: bold;"></p>
+            
+            <div id="tasks-list" class="achievements-container" style="margin-top: 10px;">
+                <!-- Tasks will be injected here by JS -->
+            </div>
+        </div>
+
+        <!-- SCOREBOARD SCREEN -->
         <div id="screen-scoreboard" class="screen">
             <div class="header-with-back" style="justify-content: space-between;">
                 <div style="display:flex; align-items:center; gap:16px;">
@@ -260,6 +289,10 @@
 
             <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px;">
                 <button id="btn-next-level" class="btn-primary sound-btn">⏭️ NEXT LEVEL</button>
+                
+                <!-- SKIP LEVEL BUTTON -->
+                <button id="btn-skip-level" class="btn-secondary sound-btn" style="background: #8B5CF6; color: white; display: none;">⏩ SKIP LEVEL</button>
+                
                 <div style="display: flex; gap: 12px;">
                     <button id="btn-result-home" class="btn-secondary sound-btn" style="flex: 1; margin: 0;">🏠 HOME</button>
                     <button id="btn-result-shop" class="btn-secondary sound-btn" style="flex: 1; margin: 0; background: #F59E0B; color: white;">🛒 SHOP</button>

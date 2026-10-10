@@ -18,6 +18,7 @@ const screenScoreboard = document.getElementById('screen-scoreboard');
 const screenReady = document.getElementById('screen-ready');
 const screenGame = document.getElementById('screen-game');
 const screenResult = document.getElementById('screen-result');
+const screenTasks = document.getElementById('screen-tasks'); // NAVU
 
 const btnStartApp = document.getElementById('btn-start-app'); 
 const inputUsername = document.getElementById('input-username'); 
@@ -44,9 +45,15 @@ const btnGoSettings = document.getElementById('btn-go-settings');
 const btnGoShop = document.getElementById('btn-go-shop');
 const btnGoAchievements = document.getElementById('btn-go-achievements');
 const btnGoScoreboard = document.getElementById('btn-go-scoreboard');
+const btnGoTasks = document.getElementById('btn-go-tasks'); // NAVU
 
 const btnBackAchievements = document.getElementById('btn-back-achievements');
 const achievementsList = document.getElementById('achievements-list');
+
+const btnBackTasks = document.getElementById('btn-back-tasks'); // NAVU
+const tasksList = document.getElementById('tasks-list'); // NAVU
+const tasksCoins = document.getElementById('tasks-coins'); // NAVU
+const taskResetTimer = document.getElementById('task-reset-timer'); // NAVU
 
 const btnBackScoreboard = document.getElementById('btn-back-scoreboard');
 const tabWorld = document.getElementById('tab-world');
@@ -75,7 +82,6 @@ const uiProgress = document.getElementById('ui-progress');
 const playArea = document.getElementById('play-area');
 const target = document.getElementById('target');
 
-// FIX: 'resultLevel' kadhi nakhyu chhe jethi crash na thay
 const resultTitle = document.getElementById('result-title');
 const resultScore = document.getElementById('result-score');
 const resultCoins = document.getElementById('result-coins');
@@ -87,6 +93,7 @@ const achievementToast = document.getElementById('achievement-toast');
 const achievementToastName = document.getElementById('achievement-toast-name');
 const btnResultHome = document.getElementById('btn-result-home');
 const btnNextLevel = document.getElementById('btn-next-level');
+const btnSkipLevel = document.getElementById('btn-skip-level'); 
 const btnResultShop = document.getElementById('btn-result-shop');
 const btnRestart = document.getElementById('btn-restart');
 
@@ -99,14 +106,25 @@ let playerProfile = {
     unlockedColors: ['Red', 'Blue', 'Green'],
     unlockedShapes: ['Circle', 'Square'],
     unlockedAchievements: [],
-    soundEnabled: true
+    soundEnabled: true,
+    // Daily Tasks Data
+    lastTaskDate: '',
+    dailyTasksProgress: {
+        tap_count: 0,
+        games_played: 0,
+        levels_cleared: 0,
+        score_accumulated: 0
+    },
+    dailyTasksClaimed: []
 };
 
+// --- SOUNDS ---
 const sfx = {
     splash: new Audio("data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YTAAAACAAf8M/xb/Ff8S/xL/FP8Y/x7/JP8p/y7/NP84/zz/P/9B/0X/SP9L/07/UP9S/w=="),
     click: new Audio("data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAAAACA/v/3/+//5//j/+b/4v/b/87/x//E/8f/wf+w/5X/c/9K/yH/9v7f/r7+lv5w/kz+Mv4S/vb93f25/Zn9c/1Q/Tb9Hf0J/fj83/y4/Jr8jPxs/FT8I/z1+9b7rvuV+2H7Kvv7+t/6nPpG+v757Pk="),
     over: new Audio("data:audio/wav;base64,UklGRq4AAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YIgAAACA/v/0/9X/p/92/zn/+v7Q/pr+Xv4W/db8gvws/Nb7ifsz+/r6x/qU+l76IPr4+cL5jvlB+fv4wPiO+E/4Evjp98v3uvfL99X30vfb9+r3/fcO+Cb4Qvh++KT41Pj5+Bn5Qfl0+ab51Pn7+R/6R/p0+pr6yPoS+zj7aPuY+8n75fsW/D38aPyY/MD86vwn/Wf9jv24/eD9CP4j/jr+Pf4="),
-    combo: new Audio("data:audio/wav;base64,UklGRhYBAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YeoAAACA/v/2/+//7f/2/wkAIgBFAFcAaAB3AIEAiACTAJoAqAC1AMMA0gDhAOkA7AD5AAcBFwEuAT8BUwFpAXoBhgGPAYsBggF4AWcBWAFFATIBHQEIAdIAewAbAL3+a/4A/qX9LP2/+0b74fqd+mD6Ifro+af5VvkK+ar4Tfjr95f3VPcY9/v28fbe9sL2rPaa9pv2kfaa9pb2rfbB9uP2Cfcj90D3Xfd995r3pve398f33/fn9+v3+fcE+A==")
+    combo: new Audio("data:audio/wav;base64,UklGRhYBAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YeoAAACA/v/2/+//7f/2/wkAIgBFAFcAaAB3AIEAiACTAJoAqAC1AMMA0gDhAOkA7AD5AAcBFwEuAT8BUwFpAXoBhgGPAYsBggF4AWcBWAFFATIBHQEIAdIAewAbAL3+a/4A/qX9LP2/+0b74fqd+mD6Ifro+af5VvkK+ar4Tfjr95f3VPcY9/v28fbe9sL2rPaa9pv2kfaa9pb2rfbB9uP2Cfcj90D3Xfd995r3pve398f33/fn9+v3+fcE+A=="),
+    coin: new Audio("data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAAAACA/v/3/+//5//j/+b/4v/b/87/x//E/8f/wf+w/5X/c/9K/yH/9v7f/r7+lv5w/kz+Mv4S/vb93f25/Zn9c/1Q/Tb9Hf0J/fj83/y4/Jr8jPxs/FT8I/z1+9b7rvuV+2H7Kvv7+t/6nPpG+v757Pk=") // Using click sound for coin temporarily
 };
 
 function playSound(type) {
@@ -116,16 +134,50 @@ document.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => { if(!btn.classList.contains('btn-disabled')) playSound('click'); });
 });
 
+// --- ACHIEVEMENTS (EXTENDED LIST) ---
 const ACHIEVEMENTS = [
+    // Gameplay
     { id: 'first_game', icon: '🎮', title: 'First Game', desc: 'Complete your first game.', condition: (p) => p.gamesPlayed >= 1 },
+    { id: 'games_10', icon: '🕹️', title: 'Arcade Rat', desc: 'Play 10 games total.', condition: (p) => p.gamesPlayed >= 10 },
+    { id: 'games_50', icon: '🎰', title: 'Addicted', desc: 'Play 50 games total.', condition: (p) => p.gamesPlayed >= 50 },
+    { id: 'games_100', icon: '🤖', title: 'Machine', desc: 'Play 100 games total.', condition: (p) => p.gamesPlayed >= 100 },
+    
+    // Scores
     { id: 'score_50', icon: '💯', title: 'Half Century', desc: 'Score 50 points in a single game.', condition: (p) => p.bestScore >= 50 },
     { id: 'score_100', icon: '🔥', title: 'Century Maker', desc: 'Score 100 points in a single game.', condition: (p) => p.bestScore >= 100 },
+    { id: 'score_150', icon: '🚀', title: 'Speed Demon', desc: 'Score 150 points in a single game.', condition: (p) => p.bestScore >= 150 },
+    { id: 'score_200', icon: '⚡', title: 'Godlike', desc: 'Score 200 points in a single game.', condition: (p) => p.bestScore >= 200 },
+    
+    // Total Scores
     { id: 'total_500', icon: '📈', title: 'Grinder', desc: 'Reach a total score of 500.', condition: (p) => p.totalScore >= 500 },
+    { id: 'total_1000', icon: '🌟', title: 'Dedicated', desc: 'Reach a total score of 1,000.', condition: (p) => p.totalScore >= 1000 },
+    { id: 'total_5000', icon: '💫', title: 'Legend', desc: 'Reach a total score of 5,000.', condition: (p) => p.totalScore >= 5000 },
+    
+    // Wealth
     { id: 'rich_kid', icon: '💰', title: 'Rich Kid', desc: 'Accumulate 1,000 coins.', condition: (p) => p.coins >= 1000 },
+    { id: 'millionaire', icon: '🏦', title: 'Banker', desc: 'Accumulate 5,000 coins.', condition: (p) => p.coins >= 5000 },
+    { id: 'billionaire', icon: '💎', title: 'Diamond Hands', desc: 'Accumulate 15,000 coins.', condition: (p) => p.coins >= 15000 },
+    
+    // Levels
     { id: 'level_3', icon: '⭐', title: 'Rising Star', desc: 'Reach Level 3.', condition: (p) => p.unlockedLevel >= 3 },
     { id: 'level_5', icon: '👑', title: 'Game Master', desc: 'Reach Level 5.', condition: (p) => p.unlockedLevel >= 5 },
-    { id: 'level_10', icon: '🚀', title: 'Unstoppable', desc: 'Reach Level 10.', condition: (p) => p.unlockedLevel >= 10 },
-    { id: 'shopper', icon: '🛍️', title: 'Big Spender', desc: 'Unlock 5 different colors.', condition: (p) => p.unlockedColors.length >= 5 }
+    { id: 'level_10', icon: '🎖️', title: 'Unstoppable', desc: 'Reach Level 10.', condition: (p) => p.unlockedLevel >= 10 },
+    { id: 'level_20', icon: '🏆', title: 'Champion', desc: 'Reach Level 20.', condition: (p) => p.unlockedLevel >= 20 },
+    { id: 'level_50', icon: '💀', title: 'Insane', desc: 'Reach Level 50.', condition: (p) => p.unlockedLevel >= 50 },
+    
+    // Shop
+    { id: 'shopper', icon: '🛍️', title: 'Shopper', desc: 'Unlock 5 different colors.', condition: (p) => p.unlockedColors.length >= 5 },
+    { id: 'collector', icon: '🎨', title: 'Collector', desc: 'Unlock 10 different colors.', condition: (p) => p.unlockedColors.length >= 10 },
+    { id: 'shapeshifter', icon: '💠', title: 'Shape Shifter', desc: 'Unlock 5 different shapes.', condition: (p) => p.unlockedShapes.length >= 5 },
+    { id: 'designer', icon: '📐', title: 'Designer', desc: 'Unlock 10 different shapes.', condition: (p) => p.unlockedShapes.length >= 10 }
+];
+
+// --- DAILY TASKS DEFINITION ---
+const DAILY_TASKS = [
+    { id: 'daily_tap', type: 'tap_count', target: 200, reward: 150, title: 'Tap 200 Times', desc: 'Tap the target 200 times today.' },
+    { id: 'daily_play', type: 'games_played', target: 5, reward: 100, title: 'Play 5 Games', desc: 'Play 5 rounds today.' },
+    { id: 'daily_clear', type: 'levels_cleared', target: 3, reward: 250, title: 'Clear 3 Levels', desc: 'Successfully beat 3 levels today.' },
+    { id: 'daily_score', type: 'score_accumulated', target: 500, reward: 300, title: 'Score 500 Points', desc: 'Accumulate 500 points across games today.' }
 ];
 
 const SHOP_COLORS = [
@@ -158,17 +210,17 @@ const SHOP_SHAPES = [
 
 const LEVELS = [];
 for (let i = 1; i <= 100; i++) {
+    let tScore = 15 + (i * 5); 
     LEVELS.push({
         id: i,
-        time: 15 + Math.floor(i / 2), 
-        size: Math.max(20, 80 - (i * 2)), 
-        targetScore: 20 + (i * 5) 
+        time: Math.max(5, Math.ceil(tScore * 0.75)), 
+        size: Math.max(15, 75 - (i * 3)), 
+        targetScore: tScore 
     });
 }
 
 const worldCountries = ["🇮🇳 India", "🇺🇸 USA", "🇬🇧 UK", "🇨🇦 Canada", "🇦🇺 Australia", "🇦🇪 UAE", "🇵🇰 Pakistan", "🇧🇩 Bangladesh", "🇳🇵 Nepal", "🇱🇰 Sri Lanka", "🇨🇳 China", "🇯🇵 Japan", "🇰🇷 South Korea", "🇸🇬 Singapore", "🇲🇾 Malaysia", "🇮🇩 Indonesia", "🇵🇭 Philippines", "🇹🇭 Thailand", "🇻🇳 Vietnam", "🇩🇪 Germany", "🇫🇷 France", "🇮🇹 Italy", "🇪🇸 Spain", "🇵🇹 Portugal", "🇳🇱 Netherlands", "🇨🇭 Switzerland", "🇸🇪 Sweden", "🇳🇴 Norway", "🇩🇰 Denmark", "🇫🇮 Finland", "🇷🇺 Russia", "🇺🇦 Ukraine", "🇧🇷 Brazil", "🇦🇷 Argentina", "🇨🇴 Colombia", "🇲🇽 Mexico", "🇿🇦 South Africa", "🇳🇬 Nigeria", "🇰🇪 Kenya", "🇪🇬 Egypt", "🇸🇦 Saudi Arabia", "🇮🇷 Iran", "🇹🇷 Turkey", "🇮🇱 Israel", "🇳🇿 New Zealand", "🌎 Other"];
 
-// FAKE LEADERBOARD DATA GENERATOR
 function generateFakeLeaderboard(isLocal) {
     let data = [];
     const names = ["Alex", "John", "Sarah", "Rahul", "Priya", "Mike", "Emma", "David", "Ayesha", "Chris", "Lisa", "Vikram", "Neha", "Sam", "Tom", "Jerry", "Ali", "Nina", "Oscar", "Zoe"];
@@ -224,6 +276,8 @@ function init() {
         if(!playerProfile.unlockedLevel) playerProfile.unlockedLevel = 1;
         if(!playerProfile.currentPlayingLevel) playerProfile.currentPlayingLevel = playerProfile.unlockedLevel;
         
+        checkDailyTasksReset(); // DAILY TASK RESET LOGIC
+
         toggleSound.checked = playerProfile.soundEnabled;
         applySettings(); 
         updateHomeUI(); 
@@ -236,7 +290,6 @@ function init() {
 function showScreen(screenElement) { screens.forEach(s => s.classList.remove('active')); screenElement.classList.add('active'); }
 function formatNumber(num) { return Number(num).toLocaleString('en-IN'); }
 
-// PROPER COUNTRY POPULATE
 function populateCountries() { 
     selectCountry.innerHTML = '<option value="" disabled selected>Select your country</option>';
     worldCountries.forEach(c => { 
@@ -247,7 +300,6 @@ function populateCountries() {
     }); 
 }
 
-// START ACTION
 btnStartApp.addEventListener('click', () => { showScreen(screenName); });
 
 btnResetData.addEventListener('click', () => {
@@ -326,6 +378,12 @@ btnFinishOnboarding.addEventListener('click', () => {
     playerProfile.unlockedShapes = ['Circle', 'Square']; 
     playerProfile.soundEnabled = true;
     
+    // Initialize Daily Tasks Data
+    const today = new Date().toDateString();
+    playerProfile.lastTaskDate = today;
+    playerProfile.dailyTasksProgress = { tap_count: 0, games_played: 0, levels_cleared: 0, score_accumulated: 0 };
+    playerProfile.dailyTasksClaimed = [];
+    
     applySettings(); 
     updateHomeUI(); 
     saveProfile(); 
@@ -348,6 +406,105 @@ function updateHomeUI() {
 btnGoSettings.addEventListener('click', () => { showScreen(screenSettings); });
 btnBackSettings.addEventListener('click', () => { showScreen(screenHome); });
 toggleSound.addEventListener('change', () => { playerProfile.soundEnabled = toggleSound.checked; saveProfile(); });
+
+// --- DAILY TASKS LOGIC ---
+function checkDailyTasksReset() {
+    const today = new Date().toDateString();
+    if (playerProfile.lastTaskDate !== today) {
+        // Reset tasks for the new day
+        playerProfile.lastTaskDate = today;
+        playerProfile.dailyTasksProgress = { tap_count: 0, games_played: 0, levels_cleared: 0, score_accumulated: 0 };
+        playerProfile.dailyTasksClaimed = [];
+        saveProfile();
+    }
+}
+
+function updateDailyTaskProgress(type, amount) {
+    if (playerProfile.dailyTasksProgress[type] !== undefined) {
+        playerProfile.dailyTasksProgress[type] += amount;
+        saveProfile();
+    }
+}
+
+btnGoTasks.addEventListener('click', () => { 
+    checkDailyTasksReset();
+    renderTasks(); 
+    tasksCoins.innerText = formatNumber(playerProfile.coins);
+    showScreen(screenTasks); 
+    
+    // Simple Next Midnight Timer update
+    setInterval(() => {
+        let now = new Date();
+        let night = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate() + 1, // the next day
+            0, 0, 0 // at 00:00:00 hours
+        );
+        let msToMidnight = night.getTime() - now.getTime();
+        let h = Math.floor(msToMidnight / 3600000);
+        let m = Math.floor((msToMidnight % 3600000) / 60000);
+        taskResetTimer.innerText = `Tasks reset in ${h}h ${m}m`;
+    }, 1000);
+});
+btnBackTasks.addEventListener('click', () => { updateHomeUI(); showScreen(screenHome); });
+
+function renderTasks() {
+    tasksList.innerHTML = '';
+    DAILY_TASKS.forEach(task => {
+        const currentProgress = playerProfile.dailyTasksProgress[task.type] || 0;
+        const isCompleted = currentProgress >= task.target;
+        const isClaimed = playerProfile.dailyTasksClaimed.includes(task.id);
+        
+        let progressPercent = (currentProgress / task.target) * 100;
+        if (progressPercent > 100) progressPercent = 100;
+
+        const card = document.createElement('div');
+        card.className = `task-card ${isCompleted && !isClaimed ? 'completed' : ''}`;
+        card.style.opacity = isClaimed ? '0.6' : '1';
+        
+        let buttonHTML = '';
+        if (isClaimed) {
+            buttonHTML = `<button class="btn-claim" disabled style="background:#E5E7EB; color:#6B7280;">Claimed</button>`;
+        } else if (isCompleted) {
+            buttonHTML = `<button class="btn-claim" onclick="claimTask('${task.id}', ${task.reward})">Claim</button>`;
+        } else {
+            buttonHTML = `<button class="btn-claim" disabled>Claim</button>`;
+        }
+
+        card.innerHTML = `
+            <div class="task-header">
+                <div class="task-info">
+                    <h4>${task.title}</h4>
+                    <p>${task.desc}</p>
+                </div>
+                <div class="task-reward">🪙 ${task.reward}</div>
+            </div>
+            <div style="display:flex; align-items:center; gap: 12px; margin-top:8px;">
+                <div style="flex:1;">
+                    <div class="task-progress-bg">
+                        <div class="task-progress-fill" style="width: ${progressPercent}%;"></div>
+                    </div>
+                    <div class="task-progress-text">${currentProgress}/${task.target}</div>
+                </div>
+                ${buttonHTML}
+            </div>
+        `;
+        tasksList.appendChild(card);
+    });
+}
+
+window.claimTask = function(taskId, reward) {
+    if (!playerProfile.dailyTasksClaimed.includes(taskId)) {
+        playerProfile.dailyTasksClaimed.push(taskId);
+        playerProfile.coins += reward;
+        tasksCoins.innerText = formatNumber(playerProfile.coins);
+        playSound('combo'); // Happy sound
+        saveProfile();
+        renderTasks();
+    }
+}
+
 
 // --- ACHIEVEMENTS LOGIC ---
 btnGoAchievements.addEventListener('click', () => { renderAchievements(); showScreen(screenAchievements); });
@@ -448,7 +605,22 @@ btnNextLevel.addEventListener('click', () => {
     startGetReadyPhase(); 
 });
 
+btnRestart.addEventListener('click', () => {
+    startGetReadyPhase();
+});
+
+btnSkipLevel.addEventListener('click', () => {
+    if(playerProfile.currentPlayingLevel >= playerProfile.unlockedLevel) {
+        playerProfile.unlockedLevel = playerProfile.currentPlayingLevel + 1;
+    }
+    playerProfile.currentPlayingLevel++;
+    saveProfile();
+    playSound('click');
+    startGetReadyPhase();
+});
+
 function startGetReadyPhase() {
+    checkDailyTasksReset(); // Ensure tasks are tracked for today
     currentLevelConfig = LEVELS[playerProfile.currentPlayingLevel - 1]; 
     readyLevelText.innerText = `LEVEL ${playerProfile.currentPlayingLevel}`; 
     readyTargetText.innerText = `Target Score: ${currentLevelConfig.targetScore}`; 
@@ -464,10 +636,6 @@ function startGetReadyPhase() {
     }, 1000);
 }
 
-btnRestart.addEventListener('click', () => {
-    startGetReadyPhase();
-});
-
 // TARGET HIT LOGIC (SPLASH & JELLY ANIMATION)
 target.addEventListener('pointerdown', handleTargetHit);
 
@@ -478,19 +646,19 @@ function handleTargetHit(e) {
     currentLevelScore++; 
     uiScore.innerText = currentLevelScore; 
     
+    // UPDATE DAILY TASK: Taps
+    updateDailyTaskProgress('tap_count', 1);
+    
     let progressPercent = (currentLevelScore / currentLevelConfig.targetScore) * 100;
     if (progressPercent > 100) progressPercent = 100;
     uiProgress.style.width = `${progressPercent}%`;
 
-    // 1. Play Splash Sound
     playSound('splash'); 
 
-    // 2. Jelly Animation
     target.classList.remove('jelly-anim');
     void target.offsetWidth; 
     target.classList.add('jelly-anim');
 
-    // 3. Pichkari Particles
     const rect = target.getBoundingClientRect();
     const clickX = e.clientX || (rect.left + rect.width / 2);
     const clickY = e.clientY || (rect.top + rect.height / 2);
@@ -498,7 +666,6 @@ function handleTargetHit(e) {
     
     createSplashEffect(clickX, clickY, currentColor);
 
-    // 4. Move Target
     moveTarget(); 
 }
 
@@ -592,6 +759,10 @@ function endGame(isSuccess) {
     playerProfile.gamesPlayed++; 
     playerProfile.totalScore += currentLevelScore; 
     
+    // UPDATE DAILY TASKS: Games played & Score Accumulated
+    updateDailyTaskProgress('games_played', 1);
+    updateDailyTaskProgress('score_accumulated', currentLevelScore);
+
     if (currentLevelScore > playerProfile.bestScore) {
         playerProfile.bestScore = currentLevelScore;
     }
@@ -600,7 +771,12 @@ function endGame(isSuccess) {
         resultTitle.innerText = `🎯 LEVEL ${playerProfile.currentPlayingLevel} CLEARED!`; 
         resultTitle.style.color = '#10B981';
         feedbackMessage.innerText = 'AWESOME WORK!';
+        
+        // UPDATE DAILY TASK: Levels Cleared
+        updateDailyTaskProgress('levels_cleared', 1);
+        
         btnNextLevel.style.display = 'block';
+        btnSkipLevel.style.display = 'none'; 
         
         if(playerProfile.currentPlayingLevel >= playerProfile.unlockedLevel) {
              playerProfile.unlockedLevel = playerProfile.currentPlayingLevel + 1;
@@ -615,13 +791,15 @@ function endGame(isSuccess) {
         resultTitle.innerText = `💀 GAME OVER`; 
         resultTitle.style.color = '#EF4444';
         feedbackMessage.innerText = 'TARGET NOT REACHED. TRY AGAIN!';
+        
         btnNextLevel.style.display = 'none';
+        btnSkipLevel.style.display = 'block'; 
+        
         unlockMessage.style.display = 'none';
     } 
 
     const newAchievements = checkAchievements();
     
-    // FIX APPLIED HERE: resultLevel mathi nikalelu chhe
     resultScore.innerText = currentLevelScore;
     resultTotalScore.innerText = playerProfile.totalScore;
     resultCoins.innerText = formatNumber(coinsEarned);
