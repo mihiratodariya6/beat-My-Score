@@ -18,7 +18,7 @@ const screenScoreboard = document.getElementById('screen-scoreboard');
 const screenReady = document.getElementById('screen-ready');
 const screenGame = document.getElementById('screen-game');
 const screenResult = document.getElementById('screen-result');
-const screenTasks = document.getElementById('screen-tasks'); // NAVU
+const screenTasks = document.getElementById('screen-tasks');
 
 const btnStartApp = document.getElementById('btn-start-app'); 
 const inputUsername = document.getElementById('input-username'); 
@@ -45,15 +45,15 @@ const btnGoSettings = document.getElementById('btn-go-settings');
 const btnGoShop = document.getElementById('btn-go-shop');
 const btnGoAchievements = document.getElementById('btn-go-achievements');
 const btnGoScoreboard = document.getElementById('btn-go-scoreboard');
-const btnGoTasks = document.getElementById('btn-go-tasks'); // NAVU
+const btnGoTasks = document.getElementById('btn-go-tasks');
 
 const btnBackAchievements = document.getElementById('btn-back-achievements');
 const achievementsList = document.getElementById('achievements-list');
 
-const btnBackTasks = document.getElementById('btn-back-tasks'); // NAVU
-const tasksList = document.getElementById('tasks-list'); // NAVU
-const tasksCoins = document.getElementById('tasks-coins'); // NAVU
-const taskResetTimer = document.getElementById('task-reset-timer'); // NAVU
+const btnBackTasks = document.getElementById('btn-back-tasks'); 
+const tasksList = document.getElementById('tasks-list'); 
+const tasksCoins = document.getElementById('tasks-coins'); 
+const taskResetTimer = document.getElementById('task-reset-timer'); 
 
 const btnBackScoreboard = document.getElementById('btn-back-scoreboard');
 const tabWorld = document.getElementById('tab-world');
@@ -107,7 +107,6 @@ let playerProfile = {
     unlockedShapes: ['Circle', 'Square'],
     unlockedAchievements: [],
     soundEnabled: true,
-    // Daily Tasks Data
     lastTaskDate: '',
     dailyTasksProgress: {
         tap_count: 0,
@@ -124,7 +123,7 @@ const sfx = {
     click: new Audio("data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAAAACA/v/3/+//5//j/+b/4v/b/87/x//E/8f/wf+w/5X/c/9K/yH/9v7f/r7+lv5w/kz+Mv4S/vb93f25/Zn9c/1Q/Tb9Hf0J/fj83/y4/Jr8jPxs/FT8I/z1+9b7rvuV+2H7Kvv7+t/6nPpG+v757Pk="),
     over: new Audio("data:audio/wav;base64,UklGRq4AAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YIgAAACA/v/0/9X/p/92/zn/+v7Q/pr+Xv4W/db8gvws/Nb7ifsz+/r6x/qU+l76IPr4+cL5jvlB+fv4wPiO+E/4Evjp98v3uvfL99X30vfb9+r3/fcO+Cb4Qvh++KT41Pj5+Bn5Qfl0+ab51Pn7+R/6R/p0+pr6yPoS+zj7aPuY+8n75fsW/D38aPyY/MD86vwn/Wf9jv24/eD9CP4j/jr+Pf4="),
     combo: new Audio("data:audio/wav;base64,UklGRhYBAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YeoAAACA/v/2/+//7f/2/wkAIgBFAFcAaAB3AIEAiACTAJoAqAC1AMMA0gDhAOkA7AD5AAcBFwEuAT8BUwFpAXoBhgGPAYsBggF4AWcBWAFFATIBHQEIAdIAewAbAL3+a/4A/qX9LP2/+0b74fqd+mD6Ifro+af5VvkK+ar4Tfjr95f3VPcY9/v28fbe9sL2rPaa9pv2kfaa9pb2rfbB9uP2Cfcj90D3Xfd995r3pve398f33/fn9+v3+fcE+A=="),
-    coin: new Audio("data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAAAACA/v/3/+//5//j/+b/4v/b/87/x//E/8f/wf+w/5X/c/9K/yH/9v7f/r7+lv5w/kz+Mv4S/vb93f25/Zn9c/1Q/Tb9Hf0J/fj83/y4/Jr8jPxs/FT8I/z1+9b7rvuV+2H7Kvv7+t/6nPpG+v757Pk=") // Using click sound for coin temporarily
+    coin: new Audio("data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAAAACA/v/3/+//5//j/+b/4v/b/87/x//E/8f/wf+w/5X/c/9K/yH/9v7f/r7+lv5w/kz+Mv4S/vb93f25/Zn9c/1Q/Tb9Hf0J/fj83/y4/Jr8jPxs/FT8I/z1+9b7rvuV+2H7Kvv7+t/6nPpG+v757Pk=")
 };
 
 function playSound(type) {
@@ -134,45 +133,34 @@ document.querySelectorAll('button').forEach(btn => {
     btn.addEventListener('click', () => { if(!btn.classList.contains('btn-disabled')) playSound('click'); });
 });
 
-// --- ACHIEVEMENTS (EXTENDED LIST) ---
+// --- ACHIEVEMENTS ---
 const ACHIEVEMENTS = [
-    // Gameplay
     { id: 'first_game', icon: '🎮', title: 'First Game', desc: 'Complete your first game.', condition: (p) => p.gamesPlayed >= 1 },
     { id: 'games_10', icon: '🕹️', title: 'Arcade Rat', desc: 'Play 10 games total.', condition: (p) => p.gamesPlayed >= 10 },
     { id: 'games_50', icon: '🎰', title: 'Addicted', desc: 'Play 50 games total.', condition: (p) => p.gamesPlayed >= 50 },
     { id: 'games_100', icon: '🤖', title: 'Machine', desc: 'Play 100 games total.', condition: (p) => p.gamesPlayed >= 100 },
-    
-    // Scores
     { id: 'score_50', icon: '💯', title: 'Half Century', desc: 'Score 50 points in a single game.', condition: (p) => p.bestScore >= 50 },
     { id: 'score_100', icon: '🔥', title: 'Century Maker', desc: 'Score 100 points in a single game.', condition: (p) => p.bestScore >= 100 },
     { id: 'score_150', icon: '🚀', title: 'Speed Demon', desc: 'Score 150 points in a single game.', condition: (p) => p.bestScore >= 150 },
     { id: 'score_200', icon: '⚡', title: 'Godlike', desc: 'Score 200 points in a single game.', condition: (p) => p.bestScore >= 200 },
-    
-    // Total Scores
     { id: 'total_500', icon: '📈', title: 'Grinder', desc: 'Reach a total score of 500.', condition: (p) => p.totalScore >= 500 },
     { id: 'total_1000', icon: '🌟', title: 'Dedicated', desc: 'Reach a total score of 1,000.', condition: (p) => p.totalScore >= 1000 },
     { id: 'total_5000', icon: '💫', title: 'Legend', desc: 'Reach a total score of 5,000.', condition: (p) => p.totalScore >= 5000 },
-    
-    // Wealth
     { id: 'rich_kid', icon: '💰', title: 'Rich Kid', desc: 'Accumulate 1,000 coins.', condition: (p) => p.coins >= 1000 },
     { id: 'millionaire', icon: '🏦', title: 'Banker', desc: 'Accumulate 5,000 coins.', condition: (p) => p.coins >= 5000 },
     { id: 'billionaire', icon: '💎', title: 'Diamond Hands', desc: 'Accumulate 15,000 coins.', condition: (p) => p.coins >= 15000 },
-    
-    // Levels
     { id: 'level_3', icon: '⭐', title: 'Rising Star', desc: 'Reach Level 3.', condition: (p) => p.unlockedLevel >= 3 },
     { id: 'level_5', icon: '👑', title: 'Game Master', desc: 'Reach Level 5.', condition: (p) => p.unlockedLevel >= 5 },
     { id: 'level_10', icon: '🎖️', title: 'Unstoppable', desc: 'Reach Level 10.', condition: (p) => p.unlockedLevel >= 10 },
     { id: 'level_20', icon: '🏆', title: 'Champion', desc: 'Reach Level 20.', condition: (p) => p.unlockedLevel >= 20 },
     { id: 'level_50', icon: '💀', title: 'Insane', desc: 'Reach Level 50.', condition: (p) => p.unlockedLevel >= 50 },
-    
-    // Shop
     { id: 'shopper', icon: '🛍️', title: 'Shopper', desc: 'Unlock 5 different colors.', condition: (p) => p.unlockedColors.length >= 5 },
     { id: 'collector', icon: '🎨', title: 'Collector', desc: 'Unlock 10 different colors.', condition: (p) => p.unlockedColors.length >= 10 },
     { id: 'shapeshifter', icon: '💠', title: 'Shape Shifter', desc: 'Unlock 5 different shapes.', condition: (p) => p.unlockedShapes.length >= 5 },
     { id: 'designer', icon: '📐', title: 'Designer', desc: 'Unlock 10 different shapes.', condition: (p) => p.unlockedShapes.length >= 10 }
 ];
 
-// --- DAILY TASKS DEFINITION ---
+// --- DAILY TASKS ---
 const DAILY_TASKS = [
     { id: 'daily_tap', type: 'tap_count', target: 200, reward: 150, title: 'Tap 200 Times', desc: 'Tap the target 200 times today.' },
     { id: 'daily_play', type: 'games_played', target: 5, reward: 100, title: 'Play 5 Games', desc: 'Play 5 rounds today.' },
@@ -211,12 +199,7 @@ const SHOP_SHAPES = [
 const LEVELS = [];
 for (let i = 1; i <= 100; i++) {
     let tScore = 15 + (i * 5); 
-    LEVELS.push({
-        id: i,
-        time: Math.max(5, Math.ceil(tScore * 0.75)), 
-        size: Math.max(15, 75 - (i * 3)), 
-        targetScore: tScore 
-    });
+    LEVELS.push({ id: i, time: Math.max(5, Math.ceil(tScore * 0.75)), size: Math.max(15, 75 - (i * 3)), targetScore: tScore });
 }
 
 const worldCountries = ["🇮🇳 India", "🇺🇸 USA", "🇬🇧 UK", "🇨🇦 Canada", "🇦🇺 Australia", "🇦🇪 UAE", "🇵🇰 Pakistan", "🇧🇩 Bangladesh", "🇳🇵 Nepal", "🇱🇰 Sri Lanka", "🇨🇳 China", "🇯🇵 Japan", "🇰🇷 South Korea", "🇸🇬 Singapore", "🇲🇾 Malaysia", "🇮🇩 Indonesia", "🇵🇭 Philippines", "🇹🇭 Thailand", "🇻🇳 Vietnam", "🇩🇪 Germany", "🇫🇷 France", "🇮🇹 Italy", "🇪🇸 Spain", "🇵🇹 Portugal", "🇳🇱 Netherlands", "🇨🇭 Switzerland", "🇸🇪 Sweden", "🇳🇴 Norway", "🇩🇰 Denmark", "🇫🇮 Finland", "🇷🇺 Russia", "🇺🇦 Ukraine", "🇧🇷 Brazil", "🇦🇷 Argentina", "🇨🇴 Colombia", "🇲🇽 Mexico", "🇿🇦 South Africa", "🇳🇬 Nigeria", "🇰🇪 Kenya", "🇪🇬 Egypt", "🇸🇦 Saudi Arabia", "🇮🇷 Iran", "🇹🇷 Turkey", "🇮🇱 Israel", "🇳🇿 New Zealand", "🌎 Other"];
@@ -225,39 +208,75 @@ function generateFakeLeaderboard(isLocal) {
     let data = [];
     const names = ["Alex", "John", "Sarah", "Rahul", "Priya", "Mike", "Emma", "David", "Ayesha", "Chris", "Lisa", "Vikram", "Neha", "Sam", "Tom", "Jerry", "Ali", "Nina", "Oscar", "Zoe"];
     const avatars = ["👨", "👩", "👤", "🧑", "👧", "👦"];
-    
     let baseScore = playerProfile.totalScore > 0 ? playerProfile.totalScore : 100;
     
     for(let i=0; i<99; i++) {
         let fakeCountry = isLocal ? playerProfile.country : worldCountries[Math.floor(Math.random() * worldCountries.length)];
         let fakeScore = Math.floor(Math.random() * (baseScore * 1.5)) + 10; 
-        
-        data.push({
-            name: names[Math.floor(Math.random() * names.length)] + Math.floor(Math.random()*999),
-            country: fakeCountry,
-            bestScore: fakeScore,
-            avatar: avatars[Math.floor(Math.random() * avatars.length)],
-            isPlayer: false
-        });
+        data.push({ name: names[Math.floor(Math.random() * names.length)] + Math.floor(Math.random()*999), country: fakeCountry, bestScore: fakeScore, avatar: avatars[Math.floor(Math.random() * avatars.length)], isPlayer: false });
     }
-
-    data.push({
-        name: playerProfile.name + ' (You)',
-        country: playerProfile.country,
-        bestScore: playerProfile.totalScore, 
-        avatar: playerProfile.gender === 'Male' ? '👨' : (playerProfile.gender === 'Female' ? '👩' : '👤'),
-        isPlayer: true
-    });
-
+    data.push({ name: playerProfile.name + ' (You)', country: playerProfile.country, bestScore: playerProfile.totalScore, avatar: playerProfile.gender === 'Male' ? '👨' : (playerProfile.gender === 'Female' ? '👩' : '👤'), isPlayer: true });
     data.sort((a,b) => b.bestScore - a.bestScore);
     data.forEach((item, idx) => item.rank = idx + 1);
-    
     return data;
 }
 
 let currentLevelConfig = null;
 let currentLevelScore = 0; 
 let timeLeft = 0; let gameInterval; let countdownInterval; let isPlaying = false;
+
+// ==========================================
+// --- ADMOB INTEGRATION (NEW) ---
+// ==========================================
+
+// 1. BANNER AD (Displays on bottom)
+async function startAdMobBanner() {
+    try {
+        const AdMob = window.Capacitor?.Plugins?.AdMob;
+        if (AdMob) {
+            await AdMob.initialize({});
+            await AdMob.showBanner({
+                adId: 'ca-app-pub-9566636476372749/5477298705', // Your Exact Banner ID
+                adSize: 'BANNER',
+                position: 'BOTTOM_CENTER',
+                margin: 0,
+                isTesting: false 
+            });
+            console.log("Banner Ad Started");
+        }
+    } catch (err) { console.log("AdMob Banner Error:", err); }
+}
+
+// 2. INTERSTITIAL AD (Displays on Game Over / Result Screen)
+let isInterstitialReady = false;
+
+async function prepareInterstitialAd() {
+    try {
+        const AdMob = window.Capacitor?.Plugins?.AdMob;
+        if (AdMob) {
+            await AdMob.prepareInterstitial({
+                // REPLACE THIS ID WITH YOUR ACTUAL INTERSTITIAL AD ID FROM ADMOB WHEN READY
+                adId: 'ca-app-pub-3940256099942544/1033173712', 
+                isTesting: true // Change to false when launching real app
+            });
+            isInterstitialReady = true;
+        }
+    } catch (err) { console.log("Interstitial Error:", err); }
+}
+
+async function showInterstitialAd() {
+    try {
+        const AdMob = window.Capacitor?.Plugins?.AdMob;
+        if (AdMob && isInterstitialReady) {
+            await AdMob.showInterstitial();
+            isInterstitialReady = false; 
+            prepareInterstitialAd(); // Prepare next ad
+        }
+    } catch (err) { console.log("Show Interstitial Error:", err); }
+}
+
+// ==========================================
+
 
 // --- INITIALIZATION (OFFLINE LOCAL STORAGE) ---
 function init() {
@@ -267,7 +286,6 @@ function init() {
     
     if (savedData) {
         playerProfile = { ...playerProfile, ...JSON.parse(savedData) };
-        
         if(!playerProfile.unlockedColors) playerProfile.unlockedColors = ['Red', 'Blue', 'Green'];
         if(!playerProfile.unlockedShapes) playerProfile.unlockedShapes = ['Circle', 'Square'];
         if(!playerProfile.targetShape) playerProfile.targetShape = 'Circle';
@@ -276,7 +294,7 @@ function init() {
         if(!playerProfile.unlockedLevel) playerProfile.unlockedLevel = 1;
         if(!playerProfile.currentPlayingLevel) playerProfile.currentPlayingLevel = playerProfile.unlockedLevel;
         
-        checkDailyTasksReset(); // DAILY TASK RESET LOGIC
+        checkDailyTasksReset(); 
 
         toggleSound.checked = playerProfile.soundEnabled;
         applySettings(); 
@@ -285,6 +303,10 @@ function init() {
     } else {
         showScreen(screenStart);
     }
+
+    // Call AdMob Setup
+    startAdMobBanner();
+    prepareInterstitialAd();
 }
 
 function showScreen(screenElement) { screens.forEach(s => s.classList.remove('active')); screenElement.classList.add('active'); }
@@ -293,10 +315,7 @@ function formatNumber(num) { return Number(num).toLocaleString('en-IN'); }
 function populateCountries() { 
     selectCountry.innerHTML = '<option value="" disabled selected>Select your country</option>';
     worldCountries.forEach(c => { 
-        let opt = document.createElement('option'); 
-        opt.value = c; 
-        opt.innerText = c; 
-        selectCountry.appendChild(opt); 
+        let opt = document.createElement('option'); opt.value = c; opt.innerText = c; selectCountry.appendChild(opt); 
     }); 
 }
 
@@ -318,9 +337,7 @@ function applySettings() {
     document.documentElement.style.setProperty('--target-shape', shapeObj.css);
     document.documentElement.style.setProperty('--target-clip-path', shapeObj.clipPath || 'none');
     
-    target.style.transform = 'none'; 
-    target.onmousedown = null; 
-    target.onmouseup = null;
+    target.style.transform = 'none'; target.onmousedown = null; target.onmouseup = null;
 }
 
 // --- ONBOARDING LOGIC ---
@@ -336,11 +353,9 @@ btnNextName.addEventListener('click', () => {
 
 btnGenders.forEach(btn => { 
     btn.addEventListener('click', () => { 
-        btnGenders.forEach(b => b.classList.remove('selected')); 
-        btn.classList.add('selected'); 
+        btnGenders.forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); 
         playerProfile.gender = btn.getAttribute('data-gender'); 
-        btnNextGender.disabled = false; 
-        btnNextGender.classList.remove('btn-disabled'); 
+        btnNextGender.disabled = false; btnNextGender.classList.remove('btn-disabled'); 
     }); 
 });
 btnNextGender.addEventListener('click', () => { showScreen(screenCountry); });
@@ -356,39 +371,25 @@ btnNextCountry.addEventListener('click', () => {
 
 btnAges.forEach(btn => { 
     btn.addEventListener('click', () => { 
-        btnAges.forEach(b => b.classList.remove('selected')); 
-        btn.classList.add('selected'); 
+        btnAges.forEach(b => b.classList.remove('selected')); btn.classList.add('selected'); 
         playerProfile.age = btn.getAttribute('data-age'); 
-        btnFinishOnboarding.disabled = false; 
-        btnFinishOnboarding.classList.remove('btn-disabled'); 
+        btnFinishOnboarding.disabled = false; btnFinishOnboarding.classList.remove('btn-disabled'); 
     }); 
 });
 
 btnFinishOnboarding.addEventListener('click', () => {
-    playerProfile.unlockedLevel = 1; 
-    playerProfile.currentPlayingLevel = 1;
-    playerProfile.targetColor = 'Red'; 
-    playerProfile.targetShape = 'Circle'; 
-    playerProfile.coins = 0; 
-    playerProfile.bestScore = 0;
-    playerProfile.totalScore = 0;
-    playerProfile.gamesPlayed = 0;
-    playerProfile.unlockedAchievements = [];
-    playerProfile.unlockedColors = ['Red', 'Blue', 'Green']; 
-    playerProfile.unlockedShapes = ['Circle', 'Square']; 
+    playerProfile.unlockedLevel = 1; playerProfile.currentPlayingLevel = 1;
+    playerProfile.targetColor = 'Red'; playerProfile.targetShape = 'Circle'; 
+    playerProfile.coins = 0; playerProfile.bestScore = 0; playerProfile.totalScore = 0; playerProfile.gamesPlayed = 0;
+    playerProfile.unlockedAchievements = []; playerProfile.unlockedColors = ['Red', 'Blue', 'Green']; playerProfile.unlockedShapes = ['Circle', 'Square']; 
     playerProfile.soundEnabled = true;
     
-    // Initialize Daily Tasks Data
     const today = new Date().toDateString();
     playerProfile.lastTaskDate = today;
     playerProfile.dailyTasksProgress = { tap_count: 0, games_played: 0, levels_cleared: 0, score_accumulated: 0 };
     playerProfile.dailyTasksClaimed = [];
     
-    applySettings(); 
-    updateHomeUI(); 
-    saveProfile(); 
-    
-    showScreen(screenHome);
+    applySettings(); updateHomeUI(); saveProfile(); showScreen(screenHome);
 });
 
 // --- HOME LOGIC ---
@@ -411,7 +412,6 @@ toggleSound.addEventListener('change', () => { playerProfile.soundEnabled = togg
 function checkDailyTasksReset() {
     const today = new Date().toDateString();
     if (playerProfile.lastTaskDate !== today) {
-        // Reset tasks for the new day
         playerProfile.lastTaskDate = today;
         playerProfile.dailyTasksProgress = { tap_count: 0, games_played: 0, levels_cleared: 0, score_accumulated: 0 };
         playerProfile.dailyTasksClaimed = [];
@@ -432,15 +432,9 @@ btnGoTasks.addEventListener('click', () => {
     tasksCoins.innerText = formatNumber(playerProfile.coins);
     showScreen(screenTasks); 
     
-    // Simple Next Midnight Timer update
     setInterval(() => {
         let now = new Date();
-        let night = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate() + 1, // the next day
-            0, 0, 0 // at 00:00:00 hours
-        );
+        let night = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0);
         let msToMidnight = night.getTime() - now.getTime();
         let h = Math.floor(msToMidnight / 3600000);
         let m = Math.floor((msToMidnight % 3600000) / 60000);
@@ -499,12 +493,11 @@ window.claimTask = function(taskId, reward) {
         playerProfile.dailyTasksClaimed.push(taskId);
         playerProfile.coins += reward;
         tasksCoins.innerText = formatNumber(playerProfile.coins);
-        playSound('combo'); // Happy sound
+        playSound('combo'); 
         saveProfile();
         renderTasks();
     }
 }
-
 
 // --- ACHIEVEMENTS LOGIC ---
 btnGoAchievements.addEventListener('click', () => { renderAchievements(); showScreen(screenAchievements); });
@@ -597,17 +590,9 @@ window.buyItem = function(type, itemName, cost) { if(playerProfile.coins >= cost
 window.equipItem = function(type, itemName) { if(type === 'Color') playerProfile.targetColor = itemName; if(type === 'Shape') playerProfile.targetShape = itemName; saveProfile(); applySettings(); renderShop(); }
 
 // --- GAME LOOP ---
-btnStartGame.addEventListener('click', () => { 
-    startGetReadyPhase(); 
-});
-
-btnNextLevel.addEventListener('click', () => { 
-    startGetReadyPhase(); 
-});
-
-btnRestart.addEventListener('click', () => {
-    startGetReadyPhase();
-});
+btnStartGame.addEventListener('click', () => { startGetReadyPhase(); });
+btnNextLevel.addEventListener('click', () => { startGetReadyPhase(); });
+btnRestart.addEventListener('click', () => { startGetReadyPhase(); });
 
 btnSkipLevel.addEventListener('click', () => {
     if(playerProfile.currentPlayingLevel >= playerProfile.unlockedLevel) {
@@ -620,7 +605,7 @@ btnSkipLevel.addEventListener('click', () => {
 });
 
 function startGetReadyPhase() {
-    checkDailyTasksReset(); // Ensure tasks are tracked for today
+    checkDailyTasksReset(); 
     currentLevelConfig = LEVELS[playerProfile.currentPlayingLevel - 1]; 
     readyLevelText.innerText = `LEVEL ${playerProfile.currentPlayingLevel}`; 
     readyTargetText.innerText = `Target Score: ${currentLevelConfig.targetScore}`; 
@@ -636,7 +621,6 @@ function startGetReadyPhase() {
     }, 1000);
 }
 
-// TARGET HIT LOGIC (SPLASH & JELLY ANIMATION)
 target.addEventListener('pointerdown', handleTargetHit);
 
 function handleTargetHit(e) { 
@@ -646,7 +630,6 @@ function handleTargetHit(e) {
     currentLevelScore++; 
     uiScore.innerText = currentLevelScore; 
     
-    // UPDATE DAILY TASK: Taps
     updateDailyTaskProgress('tap_count', 1);
     
     let progressPercent = (currentLevelScore / currentLevelConfig.targetScore) * 100;
@@ -759,7 +742,6 @@ function endGame(isSuccess) {
     playerProfile.gamesPlayed++; 
     playerProfile.totalScore += currentLevelScore; 
     
-    // UPDATE DAILY TASKS: Games played & Score Accumulated
     updateDailyTaskProgress('games_played', 1);
     updateDailyTaskProgress('score_accumulated', currentLevelScore);
 
@@ -772,7 +754,6 @@ function endGame(isSuccess) {
         resultTitle.style.color = '#10B981';
         feedbackMessage.innerText = 'AWESOME WORK!';
         
-        // UPDATE DAILY TASK: Levels Cleared
         updateDailyTaskProgress('levels_cleared', 1);
         
         btnNextLevel.style.display = 'block';
@@ -807,6 +788,9 @@ function endGame(isSuccess) {
 
     saveProfile(); 
     playSound('over');
+    
+    // CALLED INTERSTITIAL AD HERE (Will show on Game Over Screen in Mobile App)
+    showInterstitialAd();
 
     if(newAchievements.length > 0) {
         achievementToastName.innerText = newAchievements[0].title;
