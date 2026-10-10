@@ -67,6 +67,9 @@ const tabShapes = document.getElementById('tab-shapes');
 const containerColors = document.getElementById('shop-container-colors');
 const containerShapes = document.getElementById('shop-container-shapes');
 
+// NAVU BUTTON (Free Coins)
+const btnFreeCoins = document.getElementById('btn-free-coins');
+
 const btnBackSettings = document.getElementById('btn-back-settings');
 const toggleSound = document.getElementById('toggle-sound');
 const btnResetData = document.getElementById('btn-reset-data'); 
@@ -226,28 +229,25 @@ let currentLevelScore = 0;
 let timeLeft = 0; let gameInterval; let countdownInterval; let isPlaying = false;
 
 // ==========================================
-// --- ADMOB INTEGRATION (NEW) ---
+// --- REAL ADMOB INTEGRATION ---
 // ==========================================
 
-// 1. BANNER AD (Displays on bottom)
 async function startAdMobBanner() {
     try {
         const AdMob = window.Capacitor?.Plugins?.AdMob;
         if (AdMob) {
             await AdMob.initialize({});
             await AdMob.showBanner({
-                adId: 'ca-app-pub-9566636476372749/5477298705', // Your Exact Banner ID
+                adId: 'ca-app-pub-9566636476372749/5477298705', // REAL BANNER ID
                 adSize: 'BANNER',
                 position: 'BOTTOM_CENTER',
                 margin: 0,
-                isTesting: false 
+                isTesting: false // REAL ADS ON
             });
-            console.log("Banner Ad Started");
         }
     } catch (err) { console.log("AdMob Banner Error:", err); }
 }
 
-// 2. INTERSTITIAL AD (Displays on Game Over / Result Screen)
 let isInterstitialReady = false;
 
 async function prepareInterstitialAd() {
@@ -255,9 +255,9 @@ async function prepareInterstitialAd() {
         const AdMob = window.Capacitor?.Plugins?.AdMob;
         if (AdMob) {
             await AdMob.prepareInterstitial({
-                // REPLACE THIS ID WITH YOUR ACTUAL INTERSTITIAL AD ID FROM ADMOB WHEN READY
-                adId: 'ca-app-pub-3940256099942544/1033173712', 
-                isTesting: true // Change to false when launching real app
+                // REAL INTERSTITIAL AD ID
+                adId: 'ca-app-pub-9566636476372749/4402999531', 
+                isTesting: false // REAL ADS ON
             });
             isInterstitialReady = true;
         }
@@ -270,15 +270,52 @@ async function showInterstitialAd() {
         if (AdMob && isInterstitialReady) {
             await AdMob.showInterstitial();
             isInterstitialReady = false; 
-            prepareInterstitialAd(); // Prepare next ad
+            prepareInterstitialAd(); 
         }
     } catch (err) { console.log("Show Interstitial Error:", err); }
 }
 
+let isRewardedReady = false;
+
+async function prepareRewardedAd() {
+    try {
+        const AdMob = window.Capacitor?.Plugins?.AdMob;
+        if (AdMob) {
+            AdMob.addListener('onRewardedVideoAdReward', (rewardItem) => {
+                playerProfile.coins += 100; // GIVE 100 COINS
+                if(shopCoins) shopCoins.innerText = formatNumber(playerProfile.coins);
+                if(tasksCoins) tasksCoins.innerText = formatNumber(playerProfile.coins);
+                saveProfile();
+                playSound('combo');
+                alert("Awesome! You got +100 Coins for watching the ad!");
+            });
+
+            await AdMob.prepareRewardVideoAd({
+                // TEST REWARDED AD ID (Replace with real later)
+                adId: 'ca-app-pub-3940256099942544/5224354917', 
+                isTesting: true // Test mode ON for Rewarded
+            });
+            isRewardedReady = true;
+        }
+    } catch (err) { console.log("Rewarded Error:", err); }
+}
+
+async function showRewardedAd() {
+    try {
+        const AdMob = window.Capacitor?.Plugins?.AdMob;
+        if (AdMob && isRewardedReady) {
+            await AdMob.showRewardVideoAd();
+            isRewardedReady = false;
+            prepareRewardedAd(); 
+        } else {
+            alert("Ad is loading... Please check your internet or try again in a few seconds.");
+        }
+    } catch (err) { console.log("Show Rewarded Error:", err); }
+}
+
 // ==========================================
 
-
-// --- INITIALIZATION (OFFLINE LOCAL STORAGE) ---
+// --- INITIALIZATION ---
 function init() {
     populateCountries(); 
     
@@ -304,9 +341,9 @@ function init() {
         showScreen(screenStart);
     }
 
-    // Call AdMob Setup
     startAdMobBanner();
     prepareInterstitialAd();
+    prepareRewardedAd();
 }
 
 function showScreen(screenElement) { screens.forEach(s => s.classList.remove('active')); screenElement.classList.add('active'); }
@@ -340,7 +377,6 @@ function applySettings() {
     target.style.transform = 'none'; target.onmousedown = null; target.onmouseup = null;
 }
 
-// --- ONBOARDING LOGIC ---
 inputUsername.addEventListener('input', () => { 
     btnNextName.disabled = inputUsername.value.trim().length < 3; 
     btnNextName.classList.toggle('btn-disabled', btnNextName.disabled); 
@@ -392,7 +428,6 @@ btnFinishOnboarding.addEventListener('click', () => {
     applySettings(); updateHomeUI(); saveProfile(); showScreen(screenHome);
 });
 
-// --- HOME LOGIC ---
 function updateHomeUI() {
     displayName.innerText = playerProfile.name;
     displayAvatar.innerText = playerProfile.gender === 'Male' ? '👨' : (playerProfile.gender === 'Female' ? '👩' : '👤');
@@ -408,7 +443,6 @@ btnGoSettings.addEventListener('click', () => { showScreen(screenSettings); });
 btnBackSettings.addEventListener('click', () => { showScreen(screenHome); });
 toggleSound.addEventListener('change', () => { playerProfile.soundEnabled = toggleSound.checked; saveProfile(); });
 
-// --- DAILY TASKS LOGIC ---
 function checkDailyTasksReset() {
     const today = new Date().toDateString();
     if (playerProfile.lastTaskDate !== today) {
@@ -499,7 +533,6 @@ window.claimTask = function(taskId, reward) {
     }
 }
 
-// --- ACHIEVEMENTS LOGIC ---
 btnGoAchievements.addEventListener('click', () => { renderAchievements(); showScreen(screenAchievements); });
 btnBackAchievements.addEventListener('click', () => { showScreen(screenHome); });
 
@@ -523,7 +556,6 @@ function checkAchievements() {
     return newAchievements;
 }
 
-// --- FAKE SCOREBOARD LOGIC ---
 btnGoScoreboard.addEventListener('click', () => { renderScoreboard('world'); showScreen(screenScoreboard); });
 btnBackScoreboard.addEventListener('click', () => { showScreen(screenHome); });
 
@@ -555,13 +587,18 @@ function renderScoreboard(type) {
     });
 }
 
-// --- SHOP LOGIC ---
 btnGoShop.addEventListener('click', () => { shopCoins.innerText = formatNumber(playerProfile.coins); renderShop(); showScreen(screenShop); });
 btnBackShop.addEventListener('click', () => { updateHomeUI(); showScreen(screenHome); });
 btnResultShop.addEventListener('click', () => { shopCoins.innerText = formatNumber(playerProfile.coins); renderShop(); showScreen(screenShop); });
 
 tabColors.addEventListener('click', () => { tabColors.classList.add('active'); tabShapes.classList.remove('active'); containerColors.style.display = 'grid'; containerShapes.style.display = 'none'; });
 tabShapes.addEventListener('click', () => { tabShapes.classList.add('active'); tabColors.classList.remove('active'); containerShapes.style.display = 'grid'; containerColors.style.display = 'none'; });
+
+if (btnFreeCoins) {
+    btnFreeCoins.addEventListener('click', () => {
+        showRewardedAd();
+    });
+}
 
 function renderShop() {
     containerColors.innerHTML = '';
@@ -589,7 +626,6 @@ function renderShop() {
 window.buyItem = function(type, itemName, cost) { if(playerProfile.coins >= cost) { playerProfile.coins -= cost; if(type === 'Color') playerProfile.unlockedColors.push(itemName); if(type === 'Shape') playerProfile.unlockedShapes.push(itemName); shopCoins.innerText = formatNumber(playerProfile.coins); saveProfile(); renderShop(); checkAchievements(); } }
 window.equipItem = function(type, itemName) { if(type === 'Color') playerProfile.targetColor = itemName; if(type === 'Shape') playerProfile.targetShape = itemName; saveProfile(); applySettings(); renderShop(); }
 
-// --- GAME LOOP ---
 btnStartGame.addEventListener('click', () => { startGetReadyPhase(); });
 btnNextLevel.addEventListener('click', () => { startGetReadyPhase(); });
 btnRestart.addEventListener('click', () => { startGetReadyPhase(); });
@@ -789,7 +825,6 @@ function endGame(isSuccess) {
     saveProfile(); 
     playSound('over');
     
-    // CALLED INTERSTITIAL AD HERE (Will show on Game Over Screen in Mobile App)
     showInterstitialAd();
 
     if(newAchievements.length > 0) {
