@@ -67,7 +67,6 @@ const tabShapes = document.getElementById('tab-shapes');
 const containerColors = document.getElementById('shop-container-colors');
 const containerShapes = document.getElementById('shop-container-shapes');
 
-// NAVU BUTTON (Free Coins)
 const btnFreeCoins = document.getElementById('btn-free-coins');
 
 const btnBackSettings = document.getElementById('btn-back-settings');
@@ -111,12 +110,7 @@ let playerProfile = {
     unlockedAchievements: [],
     soundEnabled: true,
     lastTaskDate: '',
-    dailyTasksProgress: {
-        tap_count: 0,
-        games_played: 0,
-        levels_cleared: 0,
-        score_accumulated: 0
-    },
+    dailyTasksProgress: { tap_count: 0, games_played: 0, levels_cleared: 0, score_accumulated: 0 },
     dailyTasksClaimed: []
 };
 
@@ -125,8 +119,7 @@ const sfx = {
     splash: new Audio("data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YTAAAACAAf8M/xb/Ff8S/xL/FP8Y/x7/JP8p/y7/NP84/zz/P/9B/0X/SP9L/07/UP9S/w=="),
     click: new Audio("data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAAAACA/v/3/+//5//j/+b/4v/b/87/x//E/8f/wf+w/5X/c/9K/yH/9v7f/r7+lv5w/kz+Mv4S/vb93f25/Zn9c/1Q/Tb9Hf0J/fj83/y4/Jr8jPxs/FT8I/z1+9b7rvuV+2H7Kvv7+t/6nPpG+v757Pk="),
     over: new Audio("data:audio/wav;base64,UklGRq4AAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YIgAAACA/v/0/9X/p/92/zn/+v7Q/pr+Xv4W/db8gvws/Nb7ifsz+/r6x/qU+l76IPr4+cL5jvlB+fv4wPiO+E/4Evjp98v3uvfL99X30vfb9+r3/fcO+Cb4Qvh++KT41Pj5+Bn5Qfl0+ab51Pn7+R/6R/p0+pr6yPoS+zj7aPuY+8n75fsW/D38aPyY/MD86vwn/Wf9jv24/eD9CP4j/jr+Pf4="),
-    combo: new Audio("data:audio/wav;base64,UklGRhYBAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YeoAAACA/v/2/+//7f/2/wkAIgBFAFcAaAB3AIEAiACTAJoAqAC1AMMA0gDhAOkA7AD5AAcBFwEuAT8BUwFpAXoBhgGPAYsBggF4AWcBWAFFATIBHQEIAdIAewAbAL3+a/4A/qX9LP2/+0b74fqd+mD6Ifro+af5VvkK+ar4Tfjr95f3VPcY9/v28fbe9sL2rPaa9pv2kfaa9pb2rfbB9uP2Cfcj90D3Xfd995r3pve398f33/fn9+v3+fcE+A=="),
-    coin: new Audio("data:audio/wav;base64,UklGRmQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAAAACA/v/3/+//5//j/+b/4v/b/87/x//E/8f/wf+w/5X/c/9K/yH/9v7f/r7+lv5w/kz+Mv4S/vb93f25/Zn9c/1Q/Tb9Hf0J/fj83/y4/Jr8jPxs/FT8I/z1+9b7rvuV+2H7Kvv7+t/6nPpG+v757Pk=")
+    combo: new Audio("data:audio/wav;base64,UklGRhYBAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YeoAAACA/v/2/+//7f/2/wkAIgBFAFcAaAB3AIEAiACTAJoAqAC1AMMA0gDhAOkA7AD5AAcBFwEuAT8BUwFpAXoBhgGPAYsBggF4AWcBWAFFATIBHQEIAdIAewAbAL3+a/4A/qX9LP2/+0b74fqd+mD6Ifro+af5VvkK+ar4Tfjr95f3VPcY9/v28fbe9sL2rPaa9pv2kfaa9pb2rfbB9uP2Cfcj90D3Xfd995r3pve398f33/fn9+v3+fcE+A==")
 };
 
 function playSound(type) {
@@ -229,9 +222,31 @@ let currentLevelScore = 0;
 let timeLeft = 0; let gameInterval; let countdownInterval; let isPlaying = false;
 
 // ==========================================
-// --- REAL ADMOB INTEGRATION ---
+// --- REAL ADMOB INTEGRATION (4 ADS) ---
 // ==========================================
 
+// 1. APP OPEN AD (When App Starts or Resumes)
+async function showAppOpenAd() {
+    try {
+        const AdMob = window.Capacitor?.Plugins?.AdMob;
+        if (AdMob && AdMob.prepareAppOpenAd && AdMob.showAppOpenAd) {
+            await AdMob.prepareAppOpenAd({
+                adId: 'ca-app-pub-9566636476372749/1397562241', // REAL APP OPEN ID
+                isTesting: false
+            });
+            await AdMob.showAppOpenAd();
+        }
+    } catch (err) { console.log("App Open Ad Error:", err); }
+}
+
+// Check if user came back to the game (Resume)
+document.addEventListener('visibilitychange', () => {
+    if(document.visibilityState === 'visible') {
+        showAppOpenAd();
+    }
+});
+
+// 2. BANNER AD
 async function startAdMobBanner() {
     try {
         const AdMob = window.Capacitor?.Plugins?.AdMob;
@@ -242,12 +257,13 @@ async function startAdMobBanner() {
                 adSize: 'BANNER',
                 position: 'BOTTOM_CENTER',
                 margin: 0,
-                isTesting: false // REAL ADS ON
+                isTesting: false 
             });
         }
     } catch (err) { console.log("AdMob Banner Error:", err); }
 }
 
+// 3. INTERSTITIAL AD
 let isInterstitialReady = false;
 
 async function prepareInterstitialAd() {
@@ -255,9 +271,8 @@ async function prepareInterstitialAd() {
         const AdMob = window.Capacitor?.Plugins?.AdMob;
         if (AdMob) {
             await AdMob.prepareInterstitial({
-                // REAL INTERSTITIAL AD ID
-                adId: 'ca-app-pub-9566636476372749/4402999531', 
-                isTesting: false // REAL ADS ON
+                adId: 'ca-app-pub-9566636476372749/4402999531', // REAL INTERSTITIAL ID
+                isTesting: false 
             });
             isInterstitialReady = true;
         }
@@ -275,6 +290,7 @@ async function showInterstitialAd() {
     } catch (err) { console.log("Show Interstitial Error:", err); }
 }
 
+// 4. REWARDED AD
 let isRewardedReady = false;
 
 async function prepareRewardedAd() {
@@ -282,7 +298,7 @@ async function prepareRewardedAd() {
         const AdMob = window.Capacitor?.Plugins?.AdMob;
         if (AdMob) {
             AdMob.addListener('onRewardedVideoAdReward', (rewardItem) => {
-                playerProfile.coins += 100; // GIVE 100 COINS
+                playerProfile.coins += 100;
                 if(shopCoins) shopCoins.innerText = formatNumber(playerProfile.coins);
                 if(tasksCoins) tasksCoins.innerText = formatNumber(playerProfile.coins);
                 saveProfile();
@@ -291,9 +307,8 @@ async function prepareRewardedAd() {
             });
 
             await AdMob.prepareRewardVideoAd({
-                // TEST REWARDED AD ID (Replace with real later)
-                adId: 'ca-app-pub-3940256099942544/5224354917', 
-                isTesting: true // Test mode ON for Rewarded
+                adId: 'ca-app-pub-9566636476372749/2198498861', // REAL REWARDED ID
+                isTesting: false 
             });
             isRewardedReady = true;
         }
@@ -341,6 +356,8 @@ function init() {
         showScreen(screenStart);
     }
 
+    // LOAD ALL 4 ADS ON STARTUP
+    showAppOpenAd(); // Load App Open ad right away!
     startAdMobBanner();
     prepareInterstitialAd();
     prepareRewardedAd();
